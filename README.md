@@ -42,7 +42,7 @@ cp .env.example .env
 
 ```dotenv
 # Redmine API設定
-REDMINE_URL=http://your-redmine-instance.com  # HTTPまたはHTTPS
+REDMINE_URL=http://your-redmine-instance.com
 REDMINE_API_KEY=your_api_key_here
 
 # PostgreSQL設定（RedmineのDB）
@@ -169,7 +169,7 @@ php bin/summarize.php --test --verbose
 | `-t, --to=DATE` | 終了日を指定（YYYY-MM-DD形式） |
 | `-P, --prompt=PATH` | カスタムプロンプトファイルを指定 |
 | `-T, --title=NAME` | Wikiページタイトルのプレフィックスを指定 |
-| `-n, --no-token-info` | Gemini APIのトークン使用量情報を表示しない |
+| `-S, --show-token-info` | Gemini APIのトークン使用量情報を表示する |
 
 #### データエクスポートオプション
 
@@ -267,7 +267,7 @@ MIT
 - PostgreSQLの読み取り専用ユーザーの使用を推奨します
 - API制限やクォータにご注意ください（Gemini API）
 - 一時ファイルは定期的にクリーンアップしてください
-- デフォルトでは要約記事の最後にGemini APIのトークン使用量情報が表示されます（`-n`オプションで非表示可能）
+- デフォルトでは要約記事の最後にGemini APIのトークン使用量情報は表示されません（`-S` または `--show-token-info` オプションで表示可能）
 
 ## AI要約のカスタマイズ
 

@@ -24,7 +24,7 @@ if (empty($geminiApiKey)) {
 }
 
 // コマンドライン引数の処理
-$options = getopt('p:d:f:t:lchvDIeE:o:P:T:n', ['project:', 'days:', 'from:', 'to:', 'list-temp', 'cleanup', 'help', 'verbose', 'test', 'diagnose', 'insecure', 'export', 'export-project:', 'output:', 'prompt:', 'title:', 'no-token-info']);
+$options = getopt('p:d:f:t:lchvDIeE:o:P:T:S', ['project:', 'days:', 'from:', 'to:', 'list-temp', 'cleanup', 'help', 'verbose', 'test', 'diagnose', 'insecure', 'export', 'export-project:', 'output:', 'prompt:', 'title:', 'show-token-info']);
 
 if (isset($options['h']) || isset($options['help'])) {
     echo "使い方: php summarize.php [オプション]\n";
@@ -44,7 +44,7 @@ if (isset($options['h']) || isset($options['help'])) {
     echo "  -o, --output=PATH       エクスポート時の出力ファイルパスを指定\n";
     echo "  -P, --prompt=PATH       カスタムプロンプトファイルを指定\n";
     echo "  -T, --title=NAME        Wikiページタイトルのプレフィックスを指定\n";
-    echo "  -n, --no-token-info     Gemini APIのトークン使用量情報を表示しない\n";
+    echo "  -S, --show-token-info   Gemini APIのトークン使用量情報を表示する\n";
     echo "  -h, --help              このヘルプメッセージを表示\n";
     exit(0);
 }
@@ -84,7 +84,7 @@ if ($debug) {
 }
 
 // トークン情報の表示有無を設定
-$includeTokenInfo = !(isset($options['n']) || isset($options['no-token-info']));
+$includeTokenInfo = isset($options['S']) || isset($options['show-token-info']);
 
 // サービスを初期化
 try {

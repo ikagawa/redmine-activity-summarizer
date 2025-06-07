@@ -24,7 +24,7 @@ class SummarizerService
         int $activityDays,
         int $projectId,
         bool $debug = false,
-        bool $includeTokenInfo = true
+        bool $includeTokenInfo = false
     ) {
         $this->database = $database;
         $this->gemini = $gemini;
