@@ -28,25 +28,30 @@ $options = getopt('p:d:f:t:lchvDIeE:o:P:T:SM:', ['project:', 'days:', 'from:', '
 
 if (isset($options['h']) || isset($options['help'])) {
     echo "使い方: php summarize.php [オプション]\n";
-    echo "オプション:\n";
-    echo "  -p, --project=ID    特定のプロジェクトIDのアクティビティのみを要約\n";
-    echo "  -d, --days=NUM      要約する日数を指定（デフォルト: 環境変数のACTIVITY_DAYS）\n";
-    echo "  -f, --from=DATE     開始日を指定（YYYY-MM-DD形式）\n";
-    echo "  -t, --to=DATE       終了日を指定（YYYY-MM-DD形式）\n";
-    echo "  -l, --list-temp     保存されている一時ファイルを一覧表示\n";
-    echo "  -c, --cleanup       7日以上古い一時ファイルを削除\n";
+    echo "\n基本オプション:\n";
+    echo "  -h, --help              このヘルプメッセージを表示\n";
     echo "  -v, --verbose           詳細なデバッグ情報を表示\n";
-    echo "  --test                  Redmine API接続テストのみ実行\n";
-    echo "  -D, --diagnose          Redmine URL診断を実行\n";
-    echo "  -I, --insecure          SSL証明書の検証を無効にする\n";
-    echo "  -e, --export            アクティビティデータをJSONにエクスポートして終了\n";
-    echo "  -E, --export-project=ID 特定プロジェクトのデータをJSONにエクスポート\n";
-    echo "  -o, --output=PATH       エクスポート時の出力ファイルパスを指定\n";
+    echo "\nアクティビティ要約オプション:\n";
+    echo "  -p, --project=ID        特定のプロジェクトIDのアクティビティのみを要約\n";
+    echo "  -d, --days=NUM          要約する日数を指定（デフォルト: 環境変数のACTIVITY_DAYS）\n";
     echo "  -P, --prompt=PATH       カスタムプロンプトファイルを指定\n";
     echo "  -T, --title=NAME        Wikiページタイトルのプレフィックスを指定\n";
     echo "  -S, --show-token-info   Gemini APIのトークン使用量情報を表示する\n";
     echo "  -M, --model=NAME        使用するLLMモデル名を指定（例: gemini-1.5-pro, gemini-1.5-flash）\n";
-    echo "  -h, --help              このヘルプメッセージを表示\n";
+    echo "\n期間指定オプション:\n";
+    echo "  -f, --from=DATE         開始日を指定（YYYY-MM-DD形式）\n";
+    echo "  -t, --to=DATE           終了日を指定（YYYY-MM-DD形式）\n";
+    echo "\n診断・テストオプション:\n";
+    echo "  --test                  Redmine API接続テストのみ実行\n";
+    echo "  -D, --diagnose          Redmine URL診断を実行\n";
+    echo "  -I, --insecure          SSL証明書の検証を無効にする\n";
+    echo "\nエクスポートオプション:\n";
+    echo "  -e, --export            アクティビティデータをJSONにエクスポートして終了\n";
+    echo "  -E, --export-project=ID 特定プロジェクトのデータをJSONにエクスポート\n";
+    echo "  -o, --output=PATH       エクスポート時の出力ファイルパスを指定\n";
+    echo "\n一時ファイル管理オプション:\n";
+    echo "  -l, --list-temp         保存されている一時ファイルを一覧表示\n";
+    echo "  -c, --cleanup           7日以上古い一時ファイルを削除\n";
     exit(0);
 }
 
