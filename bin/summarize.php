@@ -31,6 +31,8 @@ if (isset($options['h']) || isset($options['help'])) {
     echo "オプション:\n";
     echo "  -p, --project=ID    特定のプロジェクトIDのアクティビティのみを要約\n";
     echo "  -d, --days=NUM      要約する日数を指定（デフォルト: 環境変数のACTIVITY_DAYS）\n";
+    echo "  -f, --from=DATE     開始日を指定（YYYY-MM-DD形式）\n";
+    echo "  -t, --to=DATE       終了日を指定（YYYY-MM-DD形式）\n";
     echo "  -l, --list-temp     保存されている一時ファイルを一覧表示\n";
     echo "  -c, --cleanup       7日以上古い一時ファイルを削除\n";
     echo "  -v, --verbose           詳細なデバッグ情報を表示\n";
@@ -152,10 +154,42 @@ try {
         }
     }
 
+    // 期間指定の設定
+    $fromDate = null;
+    $toDate = null;
+    if ((isset($options['f']) || isset($options['from'])) && (isset($options['t']) || isset($options['to']))) {
+        $fromDate = isset($options['f']) ? $options['f'] : $options['from'];
+        $toDate = isset($options['t']) ? $options['t'] : $options['to'];
+
+        // 日付形式の検証
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fromDate) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $toDate)) {
+            echo "エラー: 日付形式が無効です。YYYY-MM-DD形式で指定してください。\n";
+            exit(1);
+        }
+
+        // 日付の妥当性チェック
+        $fromDateTime = new DateTime($fromDate);
+        $toDateTime = new DateTime($toDate);
+
+        if ($fromDateTime > $toDateTime) {
+            echo "エラー: 開始日が終了日より後になっています。\n";
+            exit(1);
+        }
+
+        if ($debug) {
+            echo "期間指定: {$fromDate} から {$toDate}\n";
+        }
+    }
+
     // 全体アクティビティをJSONにエクスポート
     if (isset($options['e']) || isset($options['export'])) {
         echo "アクティビティデータをJSONファイルにエクスポートします...\n";
-        $filePath = $database->exportActivitiesToJson($activityDays, $outputPath);
+        // 日付範囲指定がある場合
+        if ($fromDate && $toDate) {
+            $filePath = $database->exportActivitiesByDateRangeToJson($fromDate, $toDate, $outputPath);
+        } else {
+            $filePath = $database->exportActivitiesToJson($activityDays, $outputPath);
+        }
         echo "エクスポート完了: {$filePath}\n";
         exit(0);
     }
@@ -164,7 +198,12 @@ try {
     if (isset($options['E']) || isset($options['export-project'])) {
         $exportProjectId = isset($options['E']) ? (int)$options['E'] : (int)$options['export-project'];
         echo "プロジェクトID {$exportProjectId} のアクティビティデータをJSONファイルにエクスポートします...\n";
-        $filePath = $database->exportProjectActivitiesToJson($exportProjectId, $activityDays, $outputPath);
+        // 日付範囲指定がある場合
+        if ($fromDate && $toDate) {
+            $filePath = $database->exportProjectActivitiesByDateRangeToJson($exportProjectId, $fromDate, $toDate, $outputPath);
+        } else {
+            $filePath = $database->exportProjectActivitiesToJson($exportProjectId, $activityDays, $outputPath);
+        }
         echo "エクスポート完了: {$filePath}\n";
         exit(0);
     }
@@ -172,10 +211,21 @@ try {
     // 特定のプロジェクトのみを処理する場合
     if (isset($options['p']) || isset($options['project'])) {
         $targetProjectId = (int)(isset($options['p']) ? $options['p'] : $options['project']);
-        $summarizer->runForProject($targetProjectId, $customPrompt, $wikiTitlePrefix);
+
+        // 日付範囲指定がある場合
+        if ($fromDate && $toDate) {
+            $summarizer->runForProjectWithDateRange($targetProjectId, $fromDate, $toDate, $customPrompt, $wikiTitlePrefix);
+        } else {
+            $summarizer->runForProject($targetProjectId, $customPrompt, $wikiTitlePrefix);
+        }
     } else {
         // 全体のアクティビティを処理
-        $summarizer->run($customPrompt, $wikiTitlePrefix);
+        // 日付範囲指定がある場合
+        if ($fromDate && $toDate) {
+            $summarizer->runWithDateRange($fromDate, $toDate, $customPrompt, $wikiTitlePrefix);
+        } else {
+            $summarizer->run($customPrompt, $wikiTitlePrefix);
+        }
     }
 
     echo "処理が完了しました。\n";

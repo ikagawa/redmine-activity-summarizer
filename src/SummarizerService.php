@@ -105,6 +105,151 @@ class SummarizerService
     }
 
     /**
+     * 期間を指定してアクティビティ要約を実行
+     *
+     * @param string $fromDate 開始日（YYYY-MM-DD形式）
+     * @param string $toDate 終了日（YYYY-MM-DD形式）
+     * @param string|null $customPrompt カスタムプロンプト（nullの場合はデフォルト）
+     * @param string|null $wikiTitlePrefix Wikiページタイトルのプレフィックス（nullの場合は「ActivitySummary」）
+     */
+    public function runWithDateRange(string $fromDate, string $toDate, ?string $customPrompt = null, ?string $wikiTitlePrefix = null): void
+    {
+        $tempFile = null;
+
+        try {
+            // API接続テスト
+            if ($this->debug) {
+                $this->testRedmineConnection();
+            }
+
+            // 1. PostgreSQLから指定期間のアクティビティを取得
+            echo "期間指定（{$fromDate} から {$toDate}）でアクティビティデータを取得中...\n";
+            $activities = $this->database->getActivitiesByDateRange($fromDate, $toDate);
+
+            if (empty($activities)) {
+                echo "{$fromDate}から{$toDate}までのアクティビティはありません。\n";
+                return;
+            }
+
+            echo count($activities) . "件のアクティビティを取得しました。\n";
+
+            // 2. Gemini 2.5で要約を生成
+            echo "アクティビティの要約を生成中...\n";
+            $summary = $this->gemini->summarizeActivities($activities, $customPrompt);
+
+            // 3. 要約を一時ファイルに保存
+            $date = date('Y-m-d_H-i-s');
+            $tempFile = $this->saveSummaryToTempFile($summary, "activities_{$fromDate}_to_{$toDate}_{$date}");
+            echo "要約を一時ファイルに保存しました: {$tempFile}\n";
+
+            // 4. 要約をRedmineのWikiページに投稿
+            echo "生成された要約をRedmine Wikiに投稿中...\n";
+
+            // Wikiページとして投稿
+            $prefix = $wikiTitlePrefix ?? 'ActivitySummary';
+            $title = "{$prefix}_{$fromDate}_to_{$toDate}";
+
+            if ($this->debug) {
+                echo "プロジェクト情報を取得中...\n";
+            }
+            $project = $this->redmine->getProject($this->projectId);
+
+            $this->redmine->updateWikiPage(
+                $this->projectId,
+                $title,
+                $summary,
+                "{$fromDate}から{$toDate}までのアクティビティ要約を自動生成"
+            );
+
+            echo "要約が正常にWikiページに投稿されました。Wiki: {$title}\n";
+
+            // 5. 投稿成功時に一時ファイルを削除
+            $this->deleteTempFile($tempFile);
+            echo "一時ファイルを削除しました。\n";
+
+        } catch (\Exception $e) {
+            echo "エラーが発生しました: {$e->getMessage()}\n";
+            if ($tempFile) {
+                echo "要約は一時ファイルに保存されています: {$tempFile}\n";
+            }
+            exit(1);
+        }
+    }
+
+    /**
+     * 特定プロジェクトの期間指定要約を実行
+     * 
+     * @param int $projectId プロジェクトID
+     * @param string $fromDate 開始日（YYYY-MM-DD形式）
+     * @param string $toDate 終了日（YYYY-MM-DD形式）
+     * @param string|null $customPrompt カスタムプロンプト（nullの場合はデフォルト）
+     * @param string|null $wikiTitlePrefix Wikiページタイトルのプレフィックス（nullの場合は「Project{ID}_ActivitySummary」）
+     */
+    public function runForProjectWithDateRange(int $projectId, string $fromDate, string $toDate, ?string $customPrompt = null, ?string $wikiTitlePrefix = null): void
+    {
+        $tempFile = null;
+
+        try {
+            // API接続テスト
+            if ($this->debug) {
+                $this->testRedmineConnection();
+            }
+
+            // 1. PostgreSQLから指定期間の特定プロジェクトのアクティビティを取得
+            echo "プロジェクトID {$projectId} の期間指定（{$fromDate} から {$toDate}）でアクティビティを取得中...\n";
+            $activities = $this->database->getProjectActivitiesByDateRange($projectId, $fromDate, $toDate);
+
+            if (empty($activities)) {
+                echo "プロジェクトID {$projectId} の{$fromDate}から{$toDate}までのアクティビティはありません。\n";
+                return;
+            }
+
+            echo count($activities) . "件のアクティビティを取得しました。\n";
+
+            // 2. Gemini 2.5で要約を生成
+            echo "アクティビティの要約を生成中...\n";
+            $summary = $this->gemini->summarizeActivities($activities, $customPrompt);
+
+            // 3. 要約を一時ファイルに保存
+            $date = date('Y-m-d_H-i-s');
+            $tempFile = $this->saveSummaryToTempFile($summary, "project_{$projectId}_{$fromDate}_to_{$toDate}_{$date}");
+            echo "要約を一時ファイルに保存しました: {$tempFile}\n";
+
+            // 4. 要約をRedmineのWikiページに投稿（課題ではなくWikiに変更）
+            echo "生成された要約をRedmine Wikiに投稿中...\n";
+
+            // Wikiページとして投稿
+            $prefix = $wikiTitlePrefix ?? "Project{$projectId}_ActivitySummary";
+            $title = "{$prefix}_{$fromDate}_to_{$toDate}";
+
+            if ($this->debug) {
+                echo "プロジェクト情報を取得中...\n";
+            }
+            $project = $this->redmine->getProject($projectId);
+
+            $this->redmine->updateWikiPage(
+                $projectId,
+                $title,
+                $summary,
+                "プロジェクト{$projectId}の{$fromDate}から{$toDate}までのアクティビティ要約を自動生成"
+            );
+
+            echo "要約が正常にWikiページに投稿されました。Wiki: {$title}\n";
+
+            // 5. 投稿成功時に一時ファイルを削除
+            $this->deleteTempFile($tempFile);
+            echo "一時ファイルを削除しました。\n";
+
+        } catch (\Exception $e) {
+            echo "エラーが発生しました: {$e->getMessage()}\n";
+            if ($tempFile) {
+                echo "要約は一時ファイルに保存されています: {$tempFile}\n";
+            }
+            exit(1);
+        }
+    }
+
+    /**
      * アクティビティ要約のメイン処理を実行
      *
      * @param string|null $customPrompt カスタムプロンプト（nullの場合はデフォルト）

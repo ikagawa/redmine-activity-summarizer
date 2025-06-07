@@ -87,8 +87,14 @@ php bin/summarize.php -p 6 -d 14 --prompt=examples/prompt_templates/executive_su
 # Wikiページのタイトルを変更して要約を生成
 php bin/summarize.php --title=MonthlyActivityReport
 
+# 特定の期間を指定して要約を生成
+php bin/summarize.php --from=2023-05-01 --to=2023-05-31
+
+# 特定プロジェクトの特定期間の要約を生成
+php bin/summarize.php -p 6 --from=2023-05-01 --to=2023-05-31
+
 # すべてのオプションを組み合わせて使用
-php bin/summarize.php -p 6 -d 14 --prompt=examples/prompt_templates/executive_summary_prompt.txt --title=JuneReport
+php bin/summarize.php -p 6 --from=2023-05-01 --to=2023-05-31 --prompt=examples/prompt_templates/executive_summary_prompt.txt --title=MayReport
 ```
 
 ### データのエクスポート
@@ -105,6 +111,12 @@ php bin/summarize.php --export --output=/path/to/output.json
 
 # エクスポートする日数を指定
 php bin/summarize.php --export --days=30
+
+# 特定の期間を指定してエクスポート
+php bin/summarize.php --export --from=2023-05-01 --to=2023-05-31
+
+# 特定プロジェクトの特定期間のデータをエクスポート
+php bin/summarize.php --export-project=1 --from=2023-05-01 --to=2023-05-31
 ```
 
 ### 一時ファイル管理
@@ -151,6 +163,8 @@ php bin/summarize.php --test --verbose
 |------------|------|
 | `-p, --project=ID` | 特定のプロジェクトIDのアクティビティのみを要約 |
 | `-d, --days=NUM` | 要約する日数を指定（デフォルト: 環境変数のACTIVITY_DAYS） |
+| `-f, --from=DATE` | 開始日を指定（YYYY-MM-DD形式） |
+| `-t, --to=DATE` | 終了日を指定（YYYY-MM-DD形式） |
 | `-P, --prompt=PATH` | カスタムプロンプトファイルを指定 |
 | `-T, --title=NAME` | Wikiページタイトルのプレフィックスを指定 |
 
@@ -181,16 +195,20 @@ php bin/summarize.php --test --verbose
 
 ### 全体要約の場合
 - **投稿先**: `.env`の`PROJECT_ID`で指定されたプロジェクト
-- **Wikiページ名**: `{プレフィックス}_{日付}`
-  - デフォルト: `ActivitySummary_YYYY-MM-DD`
-  - カスタム: `-T MonthlyReport` → `MonthlyReport_YYYY-MM-DD`
+- **Wikiページ名**: `{プレフィックス}_{日付情報}`
+  - 通常実行時: `ActivitySummary_YYYY-MM-DD`
+  - カスタムタイトル: `-T MonthlyReport` → `MonthlyReport_YYYY-MM-DD`
+  - 期間指定時: `-f 2023-05-01 -t 2023-05-31` → `ActivitySummary_2023-05-01_to_2023-05-31`
+  - 期間指定+カスタムタイトル: `-T MonthlyReport -f 2023-05-01 -t 2023-05-31` → `MonthlyReport_2023-05-01_to_2023-05-31`
 - **内容**: 全プロジェクトのアクティビティを統合した要約
 
 ### プロジェクト別要約の場合
 - **投稿先**: 指定されたプロジェクト
-- **Wikiページ名**: `{プレフィックス}_{日付}`
-  - デフォルト: `Project{ID}_ActivitySummary_YYYY-MM-DD`
-  - カスタム: `-T ProjectMonthlyReport` → `ProjectMonthlyReport_YYYY-MM-DD`
+- **Wikiページ名**: `{プレフィックス}_{日付情報}`
+  - 通常実行時: `Project{ID}_ActivitySummary_YYYY-MM-DD`
+  - カスタムタイトル: `-T ProjectMonthlyReport` → `ProjectMonthlyReport_YYYY-MM-DD`
+  - 期間指定時: `-f 2023-05-01 -t 2023-05-31` → `Project{ID}_ActivitySummary_2023-05-01_to_2023-05-31`
+  - 期間指定+カスタムタイトル: `-T MayReport -f 2023-05-01 -t 2023-05-31` → `MayReport_2023-05-01_to_2023-05-31`
 - **内容**: 指定プロジェクトのみのアクティビティ要約
 
 ## トラブルシューティング
