@@ -66,62 +66,109 @@ PROJECT_ID=1     # 全体要約を投稿するRedmineプロジェクトのID
 
 ## 使い方
 
-### 基本的な使用方法
+### 要約の生成
 
 ```bash
 # 全システムのアクティビティを要約してWikiに投稿
-php summarize.php
+php bin/summarize.php
 
 # 特定のプロジェクト（例：プロジェクトID=6）のアクティビティのみを要約
-php summarize.php -p 6
+php bin/summarize.php -p 6
 
 # 要約する日数を指定（例：14日間）
-php summarize.php -d 14
+php bin/summarize.php -d 14
+
+# カスタムプロンプトを使用して要約を生成
+php bin/summarize.php --prompt=examples/prompt_templates/technical_summary_prompt.txt
+
+# 複数のオプションを組み合わせて使用
+php bin/summarize.php -p 6 -d 14 --prompt=examples/prompt_templates/executive_summary_prompt.txt
 ```
 
-### デバッグとトラブルシューティング
+### データのエクスポート
 
 ```bash
-# 詳細なデバッグ情報を表示
-php summarize.php --verbose
+# 全体のアクティビティデータをJSONファイルにエクスポート
+php bin/summarize.php --export
 
-# Redmine API接続テスト
-php summarize.php --test
+# 特定プロジェクトのアクティビティデータをJSONファイルにエクスポート
+php bin/summarize.php --export-project=1
 
-# RedmineのURL診断（HTTPとHTTPS両方をテスト）
-php summarize.php --diagnose
+# 出力先ファイルパスを指定
+php bin/summarize.php --export --output=/path/to/output.json
 
-# SSL証明書検証を無効にして実行（自己署名証明書環境用）
-php summarize.php --insecure
+# エクスポートする日数を指定
+php bin/summarize.php --export --days=30
 ```
 
 ### 一時ファイル管理
 
 ```bash
 # 保存されている一時ファイルの一覧表示
-php summarize.php --list-temp
+php bin/summarize.php --list-temp
 
 # 7日以上古い一時ファイルを削除
-php summarize.php --cleanup
+php bin/summarize.php --cleanup
+```
+
+### デバッグとトラブルシューティング
+
+```bash
+# 詳細なデバッグ情報を表示
+php bin/summarize.php --verbose
+
+# Redmine API接続テスト
+php bin/summarize.php --test
+
+# RedmineのURL診断（HTTPとHTTPS両方をテスト）
+php bin/summarize.php --diagnose
+
+# SSL証明書検証を無効にして実行（自己署名証明書環境用）
+php bin/summarize.php --insecure
+
+# 接続テストと詳細なデバッグ情報を組み合わせる
+php bin/summarize.php --test --verbose
 ```
 
 ### コマンドライン オプション一覧
 
+#### 基本オプション
+
+| オプション | 説明 |
+|------------|------|
+| `-h, --help` | ヘルプメッセージを表示 |
+| `-v, --verbose` | 詳細なデバッグ情報を表示 |
+
+#### 要約生成オプション
+
 | オプション | 説明 |
 |------------|------|
 | `-p, --project=ID` | 特定のプロジェクトIDのアクティビティのみを要約 |
-| `-d, --days=NUM` | 要約する日数を指定 |
-| `-v, --verbose` | 詳細なデバッグ情報を表示 |
-| `-t, --test` | Redmine API接続テストのみ実行 |
-| `-D, --diagnose` | Redmine URL診断を実行 |
-| `-I, --insecure` | SSL証明書の検証を無効にする |
-| `-l, --list-temp` | 保存されている一時ファイルを一覧表示 |
-| `-c, --cleanup` | 7日以上古い一時ファイルを削除 |
+| `-d, --days=NUM` | 要約する日数を指定（デフォルト: 環境変数のACTIVITY_DAYS） |
+| `-P, --prompt=PATH` | カスタムプロンプトファイルを指定 |
+
+#### データエクスポートオプション
+
+| オプション | 説明 |
+|------------|------|
 | `-e, --export` | アクティビティデータをJSONファイルにエクスポート |
 | `-E, --export-project=ID` | 特定プロジェクトのデータをJSONにエクスポート |
 | `-o, --output=PATH` | エクスポート時の出力ファイルパスを指定 |
-| `-P, --prompt=PATH` | カスタムプロンプトファイルを指定 |
-| `-h, --help` | ヘルプメッセージを表示 |
+
+#### 一時ファイル管理
+
+| オプション | 説明 |
+|------------|------|
+| `-l, --list-temp` | 保存されている一時ファイルを一覧表示 |
+| `-c, --cleanup` | 7日以上古い一時ファイルを削除 |
+
+#### トラブルシューティング
+
+| オプション | 説明 |
+|------------|------|
+| `-t, --test` | Redmine API接続テストのみ実行 |
+| `-D, --diagnose` | Redmine URL診断を実行 |
+| `-I, --insecure` | SSL証明書の検証を無効にする（自己署名証明書環境用） |
 
 ## 出力されるWikiページ
 
@@ -189,31 +236,11 @@ MIT
 - API制限やクォータにご注意ください（Gemini API）
 - 一時ファイルは定期的にクリーンアップしてください
 
-## プロンプト調整用機能
-
-### JSONデータのエクスポート
-
-AIプロンプトの調整用に、データベースからデータをJSONファイルとして出力する機能を提供しています。
-
-```bash
-# 全体のアクティビティデータをJSONファイルにエクスポート
-php bin/summarize.php --export
-
-# 特定プロジェクトのアクティビティデータをJSONファイルにエクスポート
-php bin/summarize.php --export-project=1
-
-# 出力先ファイルパスを指定
-php bin/summarize.php --export --output=/path/to/output.json
-
-# エクスポートする日数を指定
-php bin/summarize.php --export --days=30
-```
-
-エクスポートされたJSONデータは、Gemini APIプロンプトの調整や、アクティビティデータの分析に使用できます。
+## AI要約のカスタマイズ
 
 ### カスタムプロンプトの使用
 
-独自のプロンプトテンプレートを使用して要約を生成できます。
+独自のプロンプトテンプレートを使用して、異なる目的や対象者に合わせた要約を生成できます。
 
 ```bash
 # カスタムプロンプトを使用して要約を生成
@@ -223,13 +250,35 @@ php bin/summarize.php --prompt=path/to/prompt_template.txt
 php bin/summarize.php --project=5 --prompt=path/to/prompt_template.txt
 ```
 
-プロンプトテンプレートファイル内では `{ACTIVITIES}` プレースホルダーを使用して、アクティビティデータが挿入される位置を指定できます。
+プロンプトテンプレートファイル内では `{ACTIVITIES}` プレースホルダーを使用して、アクティビティデータが挿入される位置を指定します。
 
 ### サンプルプロンプトテンプレート
 
-いくつかのサンプルプロンプトテンプレートが `examples/prompt_templates/` ディレクトリに用意されています：
+`examples/prompt_templates/` ディレクトリには、目的別のサンプルプロンプトが用意されています：
 
-- `default_prompt.txt` - デフォルトの要約プロンプト
-- `technical_summary_prompt.txt` - 技術チーム向けの詳細な要約
-- `executive_summary_prompt.txt` - 経営陣向けの簡潔な要約
-- `detailed_analysis_prompt.txt` - 包括的なデータ分析
+| テンプレート | 用途 | 特徴 |
+|------------|------|------|
+| `default_prompt.txt` | 一般的な要約 | バランスの取れた基本的な要約 |
+| `technical_summary_prompt.txt` | 技術チーム向け | 技術的な詳細とコード変更に焦点 |
+| `executive_summary_prompt.txt` | 経営陣向け | 簡潔で、進捗と成果に焦点 |
+| `detailed_analysis_prompt.txt` | 詳細分析 | 包括的なデータ分析と統計情報 |
+
+### プロンプト開発ワークフロー
+
+1. **データの抽出**: まず実際のアクティビティデータをJSONとして抽出
+   ```bash
+   php bin/summarize.php --export --output=./temp/my_data.json
+   ```
+
+2. **プロンプトの作成**: 目的に合わせたプロンプトテンプレートを作成
+   ```bash
+   cp examples/prompt_templates/default_prompt.txt ./my_custom_prompt.txt
+   # my_custom_prompt.txtを編集
+   ```
+
+3. **プロンプトのテスト**: 作成したプロンプトで要約を生成
+   ```bash
+   php bin/summarize.php --prompt=./my_custom_prompt.txt
+   ```
+
+4. **反復改善**: 結果を評価し、プロンプトを調整して再テスト
