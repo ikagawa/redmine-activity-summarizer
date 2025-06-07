@@ -33,9 +33,10 @@ class RedmineDatabase
      * 指定した日数分のアクティビティを取得
      * 
      * @param int $days 取得する日数
+     * @param string|null $userLogin 特定ユーザーのアクティビティのみを取得する場合のログイン名
      * @return array アクティビティの配列
      */
-    public function getActivities(int $days): array
+    public function getActivities(int $days, ?string $userLogin = null): array
     {
         $sql = "SELECT 
                     i.id as issue_id,
@@ -50,6 +51,7 @@ class RedmineDatabase
                 JOIN issues i ON j.journalized_id = i.id
                 JOIN projects p ON i.project_id = p.id
                 JOIN users u ON j.user_id = u.id
+                --user_cond_j
                 WHERE j.created_on >= NOW() - INTERVAL '{$days} days'
                 AND j.journalized_type = 'Issue'
                 UNION
@@ -65,11 +67,20 @@ class RedmineDatabase
                 FROM issues i
                 JOIN users u ON i.author_id = u.id
                 JOIN projects p ON i.project_id = p.id
+                --user_cond_i
                 WHERE i.created_on >= NOW() - INTERVAL '{$days} days'
                 ORDER BY created_at DESC";
 
+                        if ($userLogin !== null) {
+                            $sql = str_replace('--user_cond_j', "AND u.login = :user_id", $sql);
+                            $sql = str_replace('--user_cond_i', "AND u.login = :user_id", $sql);
+                        }
+
         try {
             $stmt = $this->connection->prepare($sql);
+            if ($userLogin !== null) {
+                $stmt->bindParam(':user_id', $userLogin, PDO::PARAM_STR);
+            }
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
@@ -148,9 +159,10 @@ class RedmineDatabase
      * 
      * @param int $projectId プロジェクトID
      * @param int $days 取得する日数
+     * @param string|null $userLogin 特定ユーザーのアクティビティのみを取得する場合のログイン名
      * @return array アクティビティの配列
      */
-    public function getProjectActivities(int $projectId, int $days): array
+    public function getProjectActivities(int $projectId, int $days, ?string $userLogin = null): array
     {
         $sql = "SELECT 
                     i.id as issue_id,
@@ -165,6 +177,7 @@ class RedmineDatabase
                 JOIN issues i ON j.journalized_id = i.id
                 JOIN projects p ON i.project_id = p.id
                 JOIN users u ON j.user_id = u.id
+                --user_cond_j
                 WHERE j.created_on >= NOW() - INTERVAL '{$days} days'
                 AND j.journalized_type = 'Issue'
                 AND p.id = :project_id
@@ -181,13 +194,22 @@ class RedmineDatabase
                 FROM issues i
                 JOIN users u ON i.author_id = u.id
                 JOIN projects p ON i.project_id = p.id
+                --user_cond_i
                 WHERE i.created_on >= NOW() - INTERVAL '{$days} days'
                 AND p.id = :project_id
                 ORDER BY created_at DESC";
 
+                        if ($userLogin !== null) {
+                            $sql = str_replace('--user_cond_j', "AND u.login = :user_id", $sql);
+                            $sql = str_replace('--user_cond_i', "AND u.login = :user_id", $sql);
+                        }
+
         try {
             $stmt = $this->connection->prepare($sql);
             $stmt->bindParam(':project_id', $projectId, PDO::PARAM_INT);
+            if ($userLogin !== null) {
+                $stmt->bindParam(':user_id', $userLogin, PDO::PARAM_STR);
+            }
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
@@ -251,9 +273,10 @@ class RedmineDatabase
      * @param int $projectId プロジェクトID
      * @param string $fromDate 開始日（YYYY-MM-DD形式）
      * @param string $toDate 終了日（YYYY-MM-DD形式）
+     * @param string|null $userLogin 特定ユーザーのアクティビティのみを取得する場合のログイン名
      * @return array アクティビティの配列
      */
-    public function getProjectActivitiesByDateRange(int $projectId, string $fromDate, string $toDate): array
+    public function getProjectActivitiesByDateRange(int $projectId, string $fromDate, string $toDate, ?string $userLogin = null): array
     {
         // 入力形式の検証（YYYY-MM-DD形式であること）
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fromDate) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $toDate)) {

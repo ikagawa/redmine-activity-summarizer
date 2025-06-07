@@ -33,7 +33,7 @@ if (isset($options['h']) || isset($options['help'])) {
     echo "  -v, --verbose           詳細なデバッグ情報を表示\n";
     echo "\nアクティビティ要約オプション:\n";
     echo "  -p, --project=ID        特定のプロジェクトIDのアクティビティのみを要約\n";
-    echo "  -u, --user=LOGIN        特定のユーザー(login名)のアクティビティのみを要約(from, toがあるときのみ)\n";
+    echo "  -u, --user=LOGIN        特定のユーザー(login名)のアクティビティのみを要約\n";
     echo "  -d, --days=NUM          要約する日数を指定（デフォルト: 環境変数のACTIVITY_DAYS）\n";
     echo "  -P, --prompt=PATH       カスタムプロンプトファイルを指定\n";
     echo "  -T, --title=NAME        Wikiページタイトルのプレフィックスを指定\n";
@@ -243,9 +243,9 @@ try {
 
         // 日付範囲指定がある場合
         if ($fromDate && $toDate) {
-            $summarizer->runForProjectWithDateRange($targetProjectId, $fromDate, $toDate, $customPrompt, $wikiTitlePrefix, $modelName);
+            $summarizer->runForProjectWithDateRange($targetProjectId, $fromDate, $toDate, $customPrompt, $wikiTitlePrefix, $modelName, $userLogin);
         } else {
-            $summarizer->runForProject($targetProjectId, $customPrompt, $wikiTitlePrefix, $modelName);
+            $summarizer->runForProject($targetProjectId, $customPrompt, $wikiTitlePrefix, $modelName, $userLogin);
         }
     } else {
         // 全体のアクティビティを処理
@@ -253,7 +253,7 @@ try {
         if ($fromDate && $toDate) {
             $summarizer->runWithDateRange($fromDate, $toDate, $customPrompt, $wikiTitlePrefix, $modelName, $userLogin);
         } else {
-            $summarizer->run($customPrompt, $wikiTitlePrefix, $modelName);
+            $summarizer->run($customPrompt, $wikiTitlePrefix, $modelName, $userLogin);
         }
     }
 

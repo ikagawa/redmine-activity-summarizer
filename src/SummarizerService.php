@@ -198,8 +198,9 @@ class SummarizerService
      * @param string|null $customPrompt カスタムプロンプト（nullの場合はデフォルト）
      * @param string|null $wikiTitlePrefix Wikiページタイトルのプレフィックス（nullの場合は「Project{ID}_ActivitySummary」）
      * @param string|null $llmModel 使用するLLMモデル（nullの場合はデフォルト）
+     * @param string|null $userLogin 特定ユーザーのアクティビティのみを取得する場合のログイン名
      */
-    public function runForProjectWithDateRange(int $projectId, string $fromDate, string $toDate, ?string $customPrompt = null, ?string $wikiTitlePrefix = null, ?string $llmModel = null): void
+    public function runForProjectWithDateRange(int $projectId, string $fromDate, string $toDate, ?string $customPrompt = null, ?string $wikiTitlePrefix = null, ?string $llmModel = null, ?string $userLogin = null): void
     {
         $tempFile = null;
 
@@ -219,7 +220,7 @@ class SummarizerService
 
             // 1. PostgreSQLから指定期間の特定プロジェクトのアクティビティを取得
             echo "プロジェクトID {$projectId} の期間指定（{$fromDate} から {$toDate}）でアクティビティを取得中...\n";
-            $activities = $this->database->getProjectActivitiesByDateRange($projectId, $fromDate, $toDate);
+            $activities = $this->database->getProjectActivitiesByDateRange($projectId, $fromDate, $toDate, $userLogin);
 
             if (empty($activities)) {
                 echo "プロジェクトID {$projectId} の{$fromDate}から{$toDate}までのアクティビティはありません。\n";
@@ -277,8 +278,9 @@ class SummarizerService
      * @param string|null $customPrompt カスタムプロンプト（nullの場合はデフォルト）
      * @param string|null $wikiTitlePrefix Wikiページタイトルのプレフィックス（nullの場合は「ActivitySummary」）
      * @param string|null $llmModel 使用するLLMモデル名（nullの場合はデフォルト）
+     * @param string|null $userLogin 特定ユーザーのアクティビティのみを取得する場合のログイン名
      */
-    public function run(?string $customPrompt = null, ?string $wikiTitlePrefix = null, ?string $llmModel = null): void
+    public function run(?string $customPrompt = null, ?string $wikiTitlePrefix = null, ?string $llmModel = null, ?string $userLogin = null): void
     {
         $tempFile = null;
         
@@ -298,7 +300,7 @@ class SummarizerService
 
             // 1. PostgreSQLからアクティビティを取得
             echo "アクティビティデータを取得中...\n";
-            $activities = $this->database->getActivities($this->activityDays);
+            $activities = $this->database->getActivities($this->activityDays, $userLogin);
 
             if (empty($activities)) {
                 echo "過去{$this->activityDays}日間のアクティビティはありません。\n";
@@ -365,8 +367,9 @@ class SummarizerService
      * @param string|null $customPrompt カスタムプロンプト（nullの場合はデフォルト）
      * @param string|null $wikiTitlePrefix Wikiページタイトルのプレフィックス（nullの場合は「Project{ID}_ActivitySummary」）
      * @param string|null $llmModel 使用するLLMモデル名（nullの場合はデフォルト）
+     * @param string|null $userLogin 特定ユーザーのアクティビティのみを取得する場合のログイン名
      */
-    public function runForProject(int $targetProjectId, ?string $customPrompt = null, ?string $wikiTitlePrefix = null, ?string $llmModel = null): void
+    public function runForProject(int $targetProjectId, ?string $customPrompt = null, ?string $wikiTitlePrefix = null, ?string $llmModel = null, ?string $userLogin = null): void
     {
         $tempFile = null;
         
@@ -386,7 +389,7 @@ class SummarizerService
 
             // 1. PostgreSQLから特定プロジェクトのアクティビティを取得
             echo "プロジェクトID {$targetProjectId} のアクティビティを取得中...\n";
-            $activities = $this->database->getProjectActivities($targetProjectId, $this->activityDays);
+            $activities = $this->database->getProjectActivities($targetProjectId, $this->activityDays, $userLogin);
 
             if (empty($activities)) {
                 echo "プロジェクトID {$targetProjectId} の過去{$this->activityDays}日間のアクティビティはありません。\n";

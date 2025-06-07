@@ -92,11 +92,17 @@ php bin/summarize.php --title=MonthlyActivityReport
 # 特定の期間を指定して要約を生成
 php bin/summarize.php --from=2025-05-01 --to=2025-05-31
 
+# 特定ユーザーのアクティビティのみを要約
+php bin/summarize.php --user=username
+
+# 特定ユーザーの特定期間のアクティビティを要約
+php bin/summarize.php --user=username --from=2025-05-01 --to=2025-05-31
+
 # 特定プロジェクトの特定期間の要約を生成
 php bin/summarize.php -p 6 --from=2025-05-01 --to=2025-05-31
 
 # すべてのオプションを組み合わせて使用
-php bin/summarize.php -p 6 --from=2025-05-01 --to=2025-05-31 --prompt=examples/prompt_templates/executive_summary_prompt.txt --title=MayReport
+php bin/summarize.php -p 6 --from=2025-05-01 --to=2025-05-31 --prompt=examples/prompt_templates/executive_summary_prompt.txt --title=MayReport --user=username
 ```
 
 ### データのエクスポート
@@ -116,6 +122,9 @@ php bin/summarize.php --export --days=30
 
 # 特定の期間を指定してエクスポート
 php bin/summarize.php --export --from=2025-05-01 --to=2025-05-31
+
+# 特定ユーザーのアクティビティをエクスポート
+php bin/summarize.php --export --user=username --from=2025-05-01 --to=2025-05-31
 
 # 特定プロジェクトの特定期間のデータをエクスポート
 php bin/summarize.php --export-project=1 --from=2025-05-01 --to=2025-05-31
