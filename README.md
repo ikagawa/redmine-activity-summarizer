@@ -83,6 +83,12 @@ php bin/summarize.php --prompt=examples/prompt_templates/technical_summary_promp
 
 # 複数のオプションを組み合わせて使用
 php bin/summarize.php -p 6 -d 14 --prompt=examples/prompt_templates/executive_summary_prompt.txt
+
+# Wikiページのタイトルを変更して要約を生成
+php bin/summarize.php --title=MonthlyActivityReport
+
+# すべてのオプションを組み合わせて使用
+php bin/summarize.php -p 6 -d 14 --prompt=examples/prompt_templates/executive_summary_prompt.txt --title=JuneReport
 ```
 
 ### データのエクスポート
@@ -146,6 +152,7 @@ php bin/summarize.php --test --verbose
 | `-p, --project=ID` | 特定のプロジェクトIDのアクティビティのみを要約 |
 | `-d, --days=NUM` | 要約する日数を指定（デフォルト: 環境変数のACTIVITY_DAYS） |
 | `-P, --prompt=PATH` | カスタムプロンプトファイルを指定 |
+| `-T, --title=NAME` | Wikiページタイトルのプレフィックスを指定 |
 
 #### データエクスポートオプション
 
@@ -174,12 +181,16 @@ php bin/summarize.php --test --verbose
 
 ### 全体要約の場合
 - **投稿先**: `.env`の`PROJECT_ID`で指定されたプロジェクト
-- **Wikiページ名**: `ActivitySummary_YYYY-MM-DD`
+- **Wikiページ名**: `{プレフィックス}_{日付}`
+  - デフォルト: `ActivitySummary_YYYY-MM-DD`
+  - カスタム: `-T MonthlyReport` → `MonthlyReport_YYYY-MM-DD`
 - **内容**: 全プロジェクトのアクティビティを統合した要約
 
 ### プロジェクト別要約の場合
 - **投稿先**: 指定されたプロジェクト
-- **Wikiページ名**: `Project{ID}_ActivitySummary_YYYY-MM-DD`
+- **Wikiページ名**: `{プレフィックス}_{日付}`
+  - デフォルト: `Project{ID}_ActivitySummary_YYYY-MM-DD`
+  - カスタム: `-T ProjectMonthlyReport` → `ProjectMonthlyReport_YYYY-MM-DD`
 - **内容**: 指定プロジェクトのみのアクティビティ要約
 
 ## トラブルシューティング

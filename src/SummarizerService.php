@@ -108,8 +108,9 @@ class SummarizerService
      * アクティビティ要約のメイン処理を実行
      *
      * @param string|null $customPrompt カスタムプロンプト（nullの場合はデフォルト）
+     * @param string|null $wikiTitlePrefix Wikiページタイトルのプレフィックス（nullの場合は「ActivitySummary」）
      */
-    public function run(?string $customPrompt = null): void
+    public function run(?string $customPrompt = null, ?string $wikiTitlePrefix = null): void
     {
         $tempFile = null;
         
@@ -144,7 +145,8 @@ class SummarizerService
 
             // Wikiページとして投稿
             $wikiDate = date('Y-m-d');
-            $title = "ActivitySummary_{$wikiDate}";
+            $prefix = $wikiTitlePrefix ?? 'ActivitySummary';
+            $title = "{$prefix}_{$wikiDate}";
             
             if ($this->debug) {
                 echo "プロジェクト情報を取得中...\n";
@@ -213,7 +215,8 @@ class SummarizerService
 
             // Wikiページとして投稿
             $wikiDate = date('Y-m-d');
-            $title = "Project{$targetProjectId}_ActivitySummary_{$wikiDate}";
+            $prefix = $wikiTitlePrefix ?? "Project{$targetProjectId}_ActivitySummary";
+            $title = "{$prefix}_{$wikiDate}";
             
             if ($this->debug) {
                 echo "プロジェクト情報を取得中...\n";

@@ -41,6 +41,7 @@ if (isset($options['h']) || isset($options['help'])) {
     echo "  -E, --export-project=ID 特定プロジェクトのデータをJSONにエクスポート\n";
     echo "  -o, --output=PATH       エクスポート時の出力ファイルパスを指定\n";
     echo "  -P, --prompt=PATH       カスタムプロンプトファイルを指定\n";
+    echo "  -T, --title=NAME        Wikiページタイトルのプレフィックスを指定\n";
     echo "  -h, --help              このヘルプメッセージを表示\n";
     exit(0);
 }
@@ -142,6 +143,15 @@ try {
         }
     }
 
+    // Wikiタイトルプレフィックスの設定
+    $wikiTitlePrefix = null;
+    if (isset($options['T']) || isset($options['title'])) {
+        $wikiTitlePrefix = isset($options['T']) ? $options['T'] : $options['title'];
+        if ($debug) {
+            echo "Wikiタイトルプレフィックスを設定: {$wikiTitlePrefix}\n";
+        }
+    }
+
     // 全体アクティビティをJSONにエクスポート
     if (isset($options['e']) || isset($options['export'])) {
         echo "アクティビティデータをJSONファイルにエクスポートします...\n";
@@ -162,10 +172,10 @@ try {
     // 特定のプロジェクトのみを処理する場合
     if (isset($options['p']) || isset($options['project'])) {
         $targetProjectId = (int)(isset($options['p']) ? $options['p'] : $options['project']);
-        $summarizer->runForProject($targetProjectId, $customPrompt);
+        $summarizer->runForProject($targetProjectId, $customPrompt, $wikiTitlePrefix);
     } else {
         // 全体のアクティビティを処理
-        $summarizer->run($customPrompt);
+        $summarizer->run($customPrompt, $wikiTitlePrefix);
     }
 
     echo "処理が完了しました。\n";
