@@ -22,15 +22,18 @@ class GeminiClient
      * アクティビティの要約を生成
      * 
      * @param array $activities アクティビティの配列
+     * @param string|null $customPrompt カスタムプロンプト（nullの場合はデフォルトプロンプト使用）
      * @return string 要約テキスト
      */
-    public function summarizeActivities(array $activities): string
+    public function summarizeActivities(array $activities, ?string $customPrompt = null): string
     {
         // アクティビティデータをテキストに変換
         $activitiesText = $this->formatActivitiesForPrompt($activities);
 
         // プロンプトを作成
-        $prompt = <<<EOT
+        if ($customPrompt === null) {
+            // デフォルトプロンプト
+            $prompt = <<<EOT
 以下はRedmineプロジェクト管理システムからのアクティビティ情報です。このデータを分析して、最近のプロジェクト活動の要約を作成してください。
 
 要約は以下の構造にしてください:
@@ -46,6 +49,10 @@ $activitiesText
 
 要約:
 EOT;
+        } else {
+            // カスタムプロンプトの場合、アクティビティデータを挿入
+            $prompt = str_replace('{ACTIVITIES}', $activitiesText, $customPrompt);
+        }
 
         try {
             // Gemini APIにリクエスト

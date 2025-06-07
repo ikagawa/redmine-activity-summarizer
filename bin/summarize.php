@@ -40,6 +40,7 @@ if (isset($options['h']) || isset($options['help'])) {
     echo "  -e, --export            アクティビティデータをJSONにエクスポートして終了\n";
     echo "  -E, --export-project=ID 特定プロジェクトのデータをJSONにエクスポート\n";
     echo "  -o, --output=PATH       エクスポート時の出力ファイルパスを指定\n";
+    echo "  -P, --prompt=PATH       カスタムプロンプトファイルを指定\n";
     echo "  -h, --help              このヘルプメッセージを表示\n";
     exit(0);
 }
@@ -127,6 +128,20 @@ try {
         $outputPath = isset($options['o']) ? $options['o'] : $options['output'];
     }
 
+    // カスタムプロンプトの設定
+    $customPrompt = null;
+    if (isset($options['P']) || isset($options['prompt'])) {
+        $promptFile = isset($options['P']) ? $options['P'] : $options['prompt'];
+        if (file_exists($promptFile)) {
+            $customPrompt = file_get_contents($promptFile);
+            if ($debug) {
+                echo "カスタムプロンプトを読み込みました: {$promptFile}\n";
+            }
+        } else {
+            echo "警告: プロンプトファイルが見つかりません: {$promptFile}\n";
+        }
+    }
+
     // 全体アクティビティをJSONにエクスポート
     if (isset($options['e']) || isset($options['export'])) {
         echo "アクティビティデータをJSONファイルにエクスポートします...\n";
@@ -147,10 +162,10 @@ try {
     // 特定のプロジェクトのみを処理する場合
     if (isset($options['p']) || isset($options['project'])) {
         $targetProjectId = (int)(isset($options['p']) ? $options['p'] : $options['project']);
-        $summarizer->runForProject($targetProjectId);
+        $summarizer->runForProject($targetProjectId, $customPrompt);
     } else {
         // 全体のアクティビティを処理
-        $summarizer->run();
+        $summarizer->run($customPrompt);
     }
 
     echo "処理が完了しました。\n";

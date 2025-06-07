@@ -106,8 +106,10 @@ class SummarizerService
 
     /**
      * アクティビティ要約のメイン処理を実行
+     *
+     * @param string|null $customPrompt カスタムプロンプト（nullの場合はデフォルト）
      */
-    public function run(): void
+    public function run(?string $customPrompt = null): void
     {
         $tempFile = null;
         
@@ -130,7 +132,7 @@ class SummarizerService
 
             // 2. Gemini 2.5で要約を生成
             echo "アクティビティの要約を生成中...\n";
-            $summary = $this->gemini->summarizeActivities($activities);
+            $summary = $this->gemini->summarizeActivities($activities, $customPrompt);
 
             // 3. 要約を一時ファイルに保存
             $date = date('Y-m-d_H-i-s');
@@ -199,7 +201,7 @@ class SummarizerService
 
             // 2. Gemini 2.5で要約を生成
             echo "アクティビティの要約を生成中...\n";
-            $summary = $this->gemini->summarizeActivities($activities);
+            $summary = $this->gemini->summarizeActivities($activities, $customPrompt);
 
             // 3. 要約を一時ファイルに保存
             $date = date('Y-m-d_H-i-s');

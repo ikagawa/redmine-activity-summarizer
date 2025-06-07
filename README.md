@@ -120,6 +120,7 @@ php summarize.php --cleanup
 | `-e, --export` | アクティビティデータをJSONファイルにエクスポート |
 | `-E, --export-project=ID` | 特定プロジェクトのデータをJSONにエクスポート |
 | `-o, --output=PATH` | エクスポート時の出力ファイルパスを指定 |
+| `-P, --prompt=PATH` | カスタムプロンプトファイルを指定 |
 | `-h, --help` | ヘルプメッセージを表示 |
 
 ## 出力されるWikiページ
@@ -190,6 +191,8 @@ MIT
 
 ## プロンプト調整用機能
 
+### JSONデータのエクスポート
+
 AIプロンプトの調整用に、データベースからデータをJSONファイルとして出力する機能を提供しています。
 
 ```bash
@@ -207,3 +210,26 @@ php bin/summarize.php --export --days=30
 ```
 
 エクスポートされたJSONデータは、Gemini APIプロンプトの調整や、アクティビティデータの分析に使用できます。
+
+### カスタムプロンプトの使用
+
+独自のプロンプトテンプレートを使用して要約を生成できます。
+
+```bash
+# カスタムプロンプトを使用して要約を生成
+php bin/summarize.php --prompt=path/to/prompt_template.txt
+
+# プロジェクト別要約でカスタムプロンプトを使用
+php bin/summarize.php --project=5 --prompt=path/to/prompt_template.txt
+```
+
+プロンプトテンプレートファイル内では `{ACTIVITIES}` プレースホルダーを使用して、アクティビティデータが挿入される位置を指定できます。
+
+### サンプルプロンプトテンプレート
+
+いくつかのサンプルプロンプトテンプレートが `examples/prompt_templates/` ディレクトリに用意されています：
+
+- `default_prompt.txt` - デフォルトの要約プロンプト
+- `technical_summary_prompt.txt` - 技術チーム向けの詳細な要約
+- `executive_summary_prompt.txt` - 経営陣向けの簡潔な要約
+- `detailed_analysis_prompt.txt` - 包括的なデータ分析
