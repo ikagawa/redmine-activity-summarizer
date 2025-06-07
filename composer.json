@@ -1,0 +1,16 @@
+{
+    "name": "redmine/activity-summarizer",
+    "description": "Summarizes Redmine activities using Gemini 2.5 and posts them back to Redmine",
+    "type": "project",
+    "require": {
+        "php": ">=7.4",
+        "kbsali/redmine-api": "^2.0",
+        "google/cloud-ai-platform": "^0.30.0",
+        "vlucas/phpdotenv": "^5.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "RedmineSummarizer\\": "src/"
+        }
+    }
+}
