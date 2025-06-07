@@ -28,21 +28,18 @@ class RedmineDatabase
     public function getActivities(int $days): array
     {
         $sql = "SELECT 
-                    j.id as issue_id,
-                    j.subject as issue_subject,
-                    j.description as issue_description,
+                    i.id as issue_id,
+                    i.subject as issue_subject,
+                    i.description as issue_description,
                     p.name as project_name,
                     u.login as author,
-                    ja.notes as comment,
-                    ja.created_on as created_at,
+                    j.notes as comment,
+                    j.created_on as created_at,
                     'issue_edit' as activity_type
                 FROM journals j
-                JOIN journal_details jd ON j.id = jd.journal_id
-                JOIN journal_details jd2 ON j.id = jd2.journal_id
-                JOIN users u ON j.user_id = u.id
                 JOIN issues i ON j.journalized_id = i.id
                 JOIN projects p ON i.project_id = p.id
-                JOIN journal_details ja ON j.id = ja.journal_id
+                JOIN users u ON j.user_id = u.id
                 WHERE j.created_on >= NOW() - INTERVAL '{$days} days'
                 AND j.journalized_type = 'Issue'
                 UNION
@@ -80,20 +77,18 @@ class RedmineDatabase
     public function getProjectActivities(int $projectId, int $days): array
     {
         $sql = "SELECT 
-                    j.id as issue_id,
-                    j.subject as issue_subject,
-                    j.description as issue_description,
+                    i.id as issue_id,
+                    i.subject as issue_subject,
+                    i.description as issue_description,
                     p.name as project_name,
                     u.login as author,
-                    ja.notes as comment,
-                    ja.created_on as created_at,
+                    j.notes as comment,
+                    j.created_on as created_at,
                     'issue_edit' as activity_type
                 FROM journals j
-                JOIN journal_details jd ON j.id = jd.journal_id
-                JOIN users u ON j.user_id = u.id
                 JOIN issues i ON j.journalized_id = i.id
                 JOIN projects p ON i.project_id = p.id
-                JOIN journal_details ja ON j.id = ja.journal_id
+                JOIN users u ON j.user_id = u.id
                 WHERE j.created_on >= NOW() - INTERVAL '{$days} days'
                 AND j.journalized_type = 'Issue'
                 AND p.id = :project_id
