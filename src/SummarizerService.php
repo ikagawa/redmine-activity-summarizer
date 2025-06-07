@@ -15,6 +15,7 @@ class SummarizerService
     private int $projectId;
     private string $tempDir;
     private bool $debug;
+    private bool $includeTokenInfo;
 
     public function __construct(
         RedmineDatabase $database,
@@ -22,7 +23,8 @@ class SummarizerService
         RedmineClient $redmine,
         int $activityDays,
         int $projectId,
-        bool $debug = false
+        bool $debug = false,
+        bool $includeTokenInfo = true
     ) {
         $this->database = $database;
         $this->gemini = $gemini;
@@ -30,6 +32,7 @@ class SummarizerService
         $this->activityDays = $activityDays;
         $this->projectId = $projectId;
         $this->debug = $debug;
+        $this->includeTokenInfo = $includeTokenInfo;
         
         // デバッグモードをRedmineClientに設定
         $this->redmine->setDebug($debug);
@@ -135,7 +138,7 @@ class SummarizerService
 
             // 2. Gemini 2.5で要約を生成
             echo "アクティビティの要約を生成中...\n";
-            $summary = $this->gemini->summarizeActivities($activities, $customPrompt);
+            $summary = $this->gemini->summarizeActivities($activities, $customPrompt, $this->includeTokenInfo);
 
             // 3. 要約を一時ファイルに保存
             $date = date('Y-m-d_H-i-s');
@@ -208,7 +211,7 @@ class SummarizerService
 
             // 2. Gemini 2.5で要約を生成
             echo "アクティビティの要約を生成中...\n";
-            $summary = $this->gemini->summarizeActivities($activities, $customPrompt);
+            $summary = $this->gemini->summarizeActivities($activities, $customPrompt, $this->includeTokenInfo);
 
             // 3. 要約を一時ファイルに保存
             $date = date('Y-m-d_H-i-s');
@@ -278,7 +281,7 @@ class SummarizerService
 
             // 2. Gemini 2.5で要約を生成
             echo "アクティビティの要約を生成中...\n";
-            $summary = $this->gemini->summarizeActivities($activities, $customPrompt);
+            $summary = $this->gemini->summarizeActivities($activities, $customPrompt, $this->includeTokenInfo);
 
             // 3. 要約を一時ファイルに保存
             $date = date('Y-m-d_H-i-s');
@@ -348,7 +351,7 @@ class SummarizerService
 
             // 2. Gemini 2.5で要約を生成
             echo "アクティビティの要約を生成中...\n";
-            $summary = $this->gemini->summarizeActivities($activities, $customPrompt);
+            $summary = $this->gemini->summarizeActivities($activities, $customPrompt, $this->includeTokenInfo);
 
             // 3. 要約を一時ファイルに保存
             $date = date('Y-m-d_H-i-s');

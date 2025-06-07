@@ -167,6 +167,7 @@ php bin/summarize.php --test --verbose
 | `-t, --to=DATE` | 終了日を指定（YYYY-MM-DD形式） |
 | `-P, --prompt=PATH` | カスタムプロンプトファイルを指定 |
 | `-T, --title=NAME` | Wikiページタイトルのプレフィックスを指定 |
+| `-n, --no-token-info` | Gemini APIのトークン使用量情報を表示しない |
 
 #### データエクスポートオプション
 
@@ -264,6 +265,7 @@ MIT
 - PostgreSQLの読み取り専用ユーザーの使用を推奨します
 - API制限やクォータにご注意ください（Gemini API）
 - 一時ファイルは定期的にクリーンアップしてください
+- デフォルトでは要約記事の最後にGemini APIのトークン使用量情報が表示されます（`-n`オプションで非表示可能）
 
 ## AI要約のカスタマイズ
 

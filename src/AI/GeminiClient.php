@@ -23,9 +23,10 @@ class GeminiClient
      * 
      * @param array $activities アクティビティの配列
      * @param string|null $customPrompt カスタムプロンプト（nullの場合はデフォルトプロンプト使用）
+     * @param bool $includeTokenInfo トークン情報を含めるかどうか
      * @return string 要約テキスト
      */
-    public function summarizeActivities(array $activities, ?string $customPrompt = null): string
+    public function summarizeActivities(array $activities, ?string $customPrompt = null, bool $includeTokenInfo = true): string
     {
         // アクティビティデータをテキストに変換
         $activitiesText = $this->formatActivitiesForPrompt($activities);
@@ -92,7 +93,24 @@ EOT;
             $responseData = json_decode($response, true);
 
             if (isset($responseData['candidates'][0]['content']['parts'][0]['text'])) {
-                return $responseData['candidates'][0]['content']['parts'][0]['text'];
+                $summaryText = $responseData['candidates'][0]['content']['parts'][0]['text'];
+
+                // トークン使用量情報を追加（指定された場合）
+                if ($includeTokenInfo && isset($responseData['usageMetadata'])) {
+                    $promptTokenCount = $responseData['usageMetadata']['promptTokenCount'] ?? 'N/A';
+                    $candidatesTokenCount = $responseData['usageMetadata']['candidatesTokenCount'] ?? 'N/A';
+                    $totalTokenCount = $responseData['usageMetadata']['totalTokenCount'] ?? 'N/A';
+
+                    $tokenInfo = "\n\n---\n\n";
+                    $tokenInfo .= "**Gemini API トークン使用量**\n";
+                    $tokenInfo .= "* プロンプトトークン: {$promptTokenCount}\n";
+                    $tokenInfo .= "* 生成トークン: {$candidatesTokenCount}\n";
+                    $tokenInfo .= "* 合計トークン: {$totalTokenCount}\n";
+
+                    $summaryText .= $tokenInfo;
+                }
+
+                return $summaryText;
             } else {
                 throw new \Exception("Gemini API レスポンス形式エラー: {$response}");
             }

@@ -44,6 +44,7 @@ if (isset($options['h']) || isset($options['help'])) {
     echo "  -o, --output=PATH       エクスポート時の出力ファイルパスを指定\n";
     echo "  -P, --prompt=PATH       カスタムプロンプトファイルを指定\n";
     echo "  -T, --title=NAME        Wikiページタイトルのプレフィックスを指定\n";
+    echo "  -n, --no-token-info     Gemini APIのトークン使用量情報を表示しない\n";
     echo "  -h, --help              このヘルプメッセージを表示\n";
     exit(0);
 }
@@ -82,13 +83,16 @@ if ($debug) {
     echo "========================\n";
 }
 
+// トークン情報の表示有無を設定
+$includeTokenInfo = !(isset($options['n']) || isset($options['no-token-info']));
+
 // サービスを初期化
 try {
     $database = new RedmineDatabase($dbHost, $dbPort, $dbName, $dbUser, $dbPassword);
     $gemini = new GeminiClient($geminiApiKey);
     $redmine = new RedmineClient($redmineUrl, $redmineApiKey, $debug, $insecure);
 
-    $summarizer = new SummarizerService($database, $gemini, $redmine, $activityDays, $projectId, $debug);
+    $summarizer = new SummarizerService($database, $gemini, $redmine, $activityDays, $projectId, $debug, $includeTokenInfo);
 
     // URL診断実行
     if (isset($options['D']) || isset($options['diagnose'])) {
