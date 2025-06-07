@@ -24,7 +24,7 @@ if (empty($geminiApiKey)) {
 }
 
 // コマンドライン引数の処理
-$options = getopt('p:d:lchvtDIeE:o:', ['project:', 'days:', 'list-temp', 'cleanup', 'help', 'verbose', 'test', 'diagnose', 'insecure', 'export', 'export-project:', 'output:']);
+$options = getopt('p:d:f:t:lchvDIeE:o:P:T:n', ['project:', 'days:', 'from:', 'to:', 'list-temp', 'cleanup', 'help', 'verbose', 'test', 'diagnose', 'insecure', 'export', 'export-project:', 'output:', 'prompt:', 'title:', 'no-token-info']);
 
 if (isset($options['h']) || isset($options['help'])) {
     echo "使い方: php summarize.php [オプション]\n";
@@ -36,7 +36,7 @@ if (isset($options['h']) || isset($options['help'])) {
     echo "  -l, --list-temp     保存されている一時ファイルを一覧表示\n";
     echo "  -c, --cleanup       7日以上古い一時ファイルを削除\n";
     echo "  -v, --verbose           詳細なデバッグ情報を表示\n";
-    echo "  -t, --test              Redmine API接続テストのみ実行\n";
+    echo "  --test                  Redmine API接続テストのみ実行\n";
     echo "  -D, --diagnose          Redmine URL診断を実行\n";
     echo "  -I, --insecure          SSL証明書の検証を無効にする\n";
     echo "  -e, --export            アクティビティデータをJSONにエクスポートして終了\n";
@@ -101,7 +101,7 @@ try {
     }
 
     // 接続テストのみ実行
-    if (isset($options['t']) || isset($options['test'])) {
+    if (isset($options['test'])) {
         $summarizer->testRedmineConnection();
         echo "接続テストが完了しました。\n";
         exit(0);

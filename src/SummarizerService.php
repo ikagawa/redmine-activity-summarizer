@@ -142,7 +142,7 @@ class SummarizerService
 
             // 3. 要約を一時ファイルに保存
             $date = date('Y-m-d_H-i-s');
-            $tempFile = $this->saveSummaryToTempFile($summary, "activities_{$fromDate}_to_{$toDate}_{$date}");
+            $tempFile = $this->saveSummaryToTempFile($summary, "activities_{$fromDate}_to_{$toDate}_{$date}", $fromDate, $toDate);
             echo "要約を一時ファイルに保存しました: {$tempFile}\n";
 
             // 4. 要約をRedmineのWikiページに投稿
@@ -215,7 +215,7 @@ class SummarizerService
 
             // 3. 要約を一時ファイルに保存
             $date = date('Y-m-d_H-i-s');
-            $tempFile = $this->saveSummaryToTempFile($summary, "project_{$projectId}_{$fromDate}_to_{$toDate}_{$date}");
+            $tempFile = $this->saveSummaryToTempFile($summary, "project_{$projectId}_{$fromDate}_to_{$toDate}_{$date}", $fromDate, $toDate);
             echo "要約を一時ファイルに保存しました: {$tempFile}\n";
 
             // 4. 要約をRedmineのWikiページに投稿（課題ではなくWikiに変更）
@@ -395,13 +395,20 @@ class SummarizerService
         }
     }
 
-    protected function saveSummaryToTempFile(string $summary, string $filename): string
+    protected function saveSummaryToTempFile(string $summary, string $filename, ?string $fromDate = null, ?string $toDate = null): string
     {
         $filepath = $this->tempDir . '/' . $filename . '.md';
 
         // メタデータを含む内容を作成
         $content = "# 生成日時: " . date('Y-m-d H:i:s') . "\n";
-        $content .= "# 対象期間: 過去{$this->activityDays}日間\n";
+
+        // 期間情報の設定（期間指定があればそれを表示、なければ過去X日間を表示）
+        if ($fromDate !== null && $toDate !== null) {
+            $content .= "# 対象期間: {$fromDate} から {$toDate}\n";
+        } else {
+            $content .= "# 対象期間: 過去{$this->activityDays}日間\n";
+        }
+
         $content .= "# プロジェクトID: {$this->projectId}\n\n";
         $content .= "---\n\n";
         $content .= $summary;

@@ -104,7 +104,7 @@ class RedmineDatabase
                 JOIN issues i ON j.journalized_id = i.id
                 JOIN projects p ON i.project_id = p.id
                 JOIN users u ON j.user_id = u.id
-                WHERE j.created_on >= :from_date AND j.created_on <= :to_date || ' 23:59:59'
+                WHERE j.created_on >= :from_date AND j.created_on <= (:to_date || ' 23:59:59')::timestamp
                 AND j.journalized_type = 'Issue'
                 UNION
                 SELECT 
@@ -119,7 +119,7 @@ class RedmineDatabase
                 FROM issues i
                 JOIN users u ON i.author_id = u.id
                 JOIN projects p ON i.project_id = p.id
-                WHERE i.created_on >= :from_date AND i.created_on <= :to_date || ' 23:59:59'
+                WHERE i.created_on >= :from_date AND i.created_on <= (:to_date || ' 23:59:59')::timestamp
                 ORDER BY created_at DESC";
 
         try {
@@ -263,7 +263,7 @@ class RedmineDatabase
                 JOIN issues i ON j.journalized_id = i.id
                 JOIN projects p ON i.project_id = p.id
                 JOIN users u ON j.user_id = u.id
-                WHERE j.created_on >= :from_date AND j.created_on <= :to_date || ' 23:59:59'
+                WHERE j.created_on >= :from_date AND j.created_on <= (:to_date || ' 23:59:59')::timestamp
                 AND j.journalized_type = 'Issue'
                 AND p.id = :project_id
                 UNION
@@ -279,7 +279,7 @@ class RedmineDatabase
                 FROM issues i
                 JOIN users u ON i.author_id = u.id
                 JOIN projects p ON i.project_id = p.id
-                WHERE i.created_on >= :from_date AND i.created_on <= :to_date || ' 23:59:59'
+                WHERE i.created_on >= :from_date AND i.created_on <= (:to_date || ' 23:59:59')::timestamp
                 AND p.id = :project_id
                 ORDER BY created_at DESC";
 
