@@ -11,11 +11,17 @@ use Google\Cloud\AIPlatform\V1\Part;
 class GeminiClient
 {
     private string $apiKey;
-    private string $model = 'gemini-1.5-pro';
+    private string $model;
 
-    public function __construct(string $apiKey)
+    public function __construct(string $apiKey, string $model = 'gemini-1.5-pro')
     {
         $this->apiKey = $apiKey;
+        $this->model = $model;
+    }
+
+    public function setModel(string $modelName): void
+    {
+        $this->model = $modelName;
     }
 
     /**

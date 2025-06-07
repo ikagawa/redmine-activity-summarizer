@@ -114,8 +114,9 @@ class SummarizerService
      * @param string $toDate 終了日（YYYY-MM-DD形式）
      * @param string|null $customPrompt カスタムプロンプト（nullの場合はデフォルト）
      * @param string|null $wikiTitlePrefix Wikiページタイトルのプレフィックス（nullの場合は「ActivitySummary」）
+     * @param string|null $llmModel 使用するLLMモデル（nullの場合はデフォルト）
      */
-    public function runWithDateRange(string $fromDate, string $toDate, ?string $customPrompt = null, ?string $wikiTitlePrefix = null): void
+    public function runWithDateRange(string $fromDate, string $toDate, ?string $customPrompt = null, ?string $wikiTitlePrefix = null, ?string $llmModel = null): void
     {
         $tempFile = null;
 
@@ -123,6 +124,14 @@ class SummarizerService
             // API接続テスト
             if ($this->debug) {
                 $this->testRedmineConnection();
+            }
+
+            // LLMモデルが指定されている場合は設定
+            if ($llmModel !== null) {
+                $this->gemini->setModel($llmModel);
+                if ($this->debug) {
+                    echo "LLMモデルを {$llmModel} に設定しました\n";
+                }
             }
 
             // 1. PostgreSQLから指定期間のアクティビティを取得
@@ -187,8 +196,9 @@ class SummarizerService
      * @param string $toDate 終了日（YYYY-MM-DD形式）
      * @param string|null $customPrompt カスタムプロンプト（nullの場合はデフォルト）
      * @param string|null $wikiTitlePrefix Wikiページタイトルのプレフィックス（nullの場合は「Project{ID}_ActivitySummary」）
+     * @param string|null $llmModel 使用するLLMモデル（nullの場合はデフォルト）
      */
-    public function runForProjectWithDateRange(int $projectId, string $fromDate, string $toDate, ?string $customPrompt = null, ?string $wikiTitlePrefix = null): void
+    public function runForProjectWithDateRange(int $projectId, string $fromDate, string $toDate, ?string $customPrompt = null, ?string $wikiTitlePrefix = null, ?string $llmModel = null): void
     {
         $tempFile = null;
 
@@ -196,6 +206,14 @@ class SummarizerService
             // API接続テスト
             if ($this->debug) {
                 $this->testRedmineConnection();
+            }
+
+            // LLMモデルが指定されている場合は設定
+            if ($llmModel !== null) {
+                $this->gemini->setModel($llmModel);
+                if ($this->debug) {
+                    echo "LLMモデルを {$llmModel} に設定しました\n";
+                }
             }
 
             // 1. PostgreSQLから指定期間の特定プロジェクトのアクティビティを取得
@@ -257,8 +275,9 @@ class SummarizerService
      *
      * @param string|null $customPrompt カスタムプロンプト（nullの場合はデフォルト）
      * @param string|null $wikiTitlePrefix Wikiページタイトルのプレフィックス（nullの場合は「ActivitySummary」）
+     * @param string|null $llmModel 使用するLLMモデル名（nullの場合はデフォルト）
      */
-    public function run(?string $customPrompt = null, ?string $wikiTitlePrefix = null): void
+    public function run(?string $customPrompt = null, ?string $wikiTitlePrefix = null, ?string $llmModel = null): void
     {
         $tempFile = null;
         
@@ -266,6 +285,14 @@ class SummarizerService
             // API接続テスト
             if ($this->debug) {
                 $this->testRedmineConnection();
+            }
+
+            // LLMモデルが指定されている場合は設定
+            if ($llmModel !== null) {
+                $this->gemini->setModel($llmModel);
+                if ($this->debug) {
+                    echo "LLMモデルを {$llmModel} に設定しました\n";
+                }
             }
 
             // 1. PostgreSQLからアクティビティを取得
@@ -281,6 +308,13 @@ class SummarizerService
 
             // 2. Gemini 2.5で要約を生成
             echo "アクティビティの要約を生成中...\n";
+            // モデル名が指定された場合は一時的にモデルを変更
+            if ($llmModel !== null) {
+                if ($this->debug) {
+                    echo "モデルを{$llmModel}に設定して要約を生成します...\n";
+                }
+                $this->gemini->setModel($llmModel);
+            }
             $summary = $this->gemini->summarizeActivities($activities, $customPrompt, $this->includeTokenInfo);
 
             // 3. 要約を一時ファイルに保存
@@ -329,8 +363,9 @@ class SummarizerService
      * @param int $targetProjectId 対象プロジェクトID
      * @param string|null $customPrompt カスタムプロンプト（nullの場合はデフォルト）
      * @param string|null $wikiTitlePrefix Wikiページタイトルのプレフィックス（nullの場合は「Project{ID}_ActivitySummary」）
+     * @param string|null $llmModel 使用するLLMモデル名（nullの場合はデフォルト）
      */
-    public function runForProject(int $targetProjectId, ?string $customPrompt = null, ?string $wikiTitlePrefix = null): void
+    public function runForProject(int $targetProjectId, ?string $customPrompt = null, ?string $wikiTitlePrefix = null, ?string $llmModel = null): void
     {
         $tempFile = null;
         
@@ -338,6 +373,14 @@ class SummarizerService
             // API接続テスト
             if ($this->debug) {
                 $this->testRedmineConnection();
+            }
+
+            // LLMモデルが指定されている場合は設定
+            if ($llmModel !== null) {
+                $this->gemini->setModel($llmModel);
+                if ($this->debug) {
+                    echo "LLMモデルを {$llmModel} に設定しました\n";
+                }
             }
 
             // 1. PostgreSQLから特定プロジェクトのアクティビティを取得

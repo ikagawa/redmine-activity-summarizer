@@ -24,7 +24,7 @@ if (empty($geminiApiKey)) {
 }
 
 // コマンドライン引数の処理
-$options = getopt('p:d:f:t:lchvDIeE:o:P:T:S', ['project:', 'days:', 'from:', 'to:', 'list-temp', 'cleanup', 'help', 'verbose', 'test', 'diagnose', 'insecure', 'export', 'export-project:', 'output:', 'prompt:', 'title:', 'show-token-info']);
+$options = getopt('p:d:f:t:lchvDIeE:o:P:T:SM:', ['project:', 'days:', 'from:', 'to:', 'list-temp', 'cleanup', 'help', 'verbose', 'test', 'diagnose', 'insecure', 'export', 'export-project:', 'output:', 'prompt:', 'title:', 'show-token-info', 'model:']);
 
 if (isset($options['h']) || isset($options['help'])) {
     echo "使い方: php summarize.php [オプション]\n";
@@ -45,6 +45,7 @@ if (isset($options['h']) || isset($options['help'])) {
     echo "  -P, --prompt=PATH       カスタムプロンプトファイルを指定\n";
     echo "  -T, --title=NAME        Wikiページタイトルのプレフィックスを指定\n";
     echo "  -S, --show-token-info   Gemini APIのトークン使用量情報を表示する\n";
+    echo "  -M, --model=NAME        使用するLLMモデル名を指定（例: gemini-1.5-pro, gemini-1.5-flash）\n";
     echo "  -h, --help              このヘルプメッセージを表示\n";
     exit(0);
 }
@@ -158,6 +159,15 @@ try {
         }
     }
 
+    // LLMモデル名の設定
+    $modelName = null;
+    if (isset($options['M']) || isset($options['model'])) {
+        $modelName = isset($options['M']) ? $options['M'] : $options['model'];
+        if ($debug) {
+            echo "LLMモデルを設定: {$modelName}\n";
+        }
+    }
+
     // 期間指定の設定
     $fromDate = null;
     $toDate = null;
@@ -218,17 +228,17 @@ try {
 
         // 日付範囲指定がある場合
         if ($fromDate && $toDate) {
-            $summarizer->runForProjectWithDateRange($targetProjectId, $fromDate, $toDate, $customPrompt, $wikiTitlePrefix);
+            $summarizer->runForProjectWithDateRange($targetProjectId, $fromDate, $toDate, $customPrompt, $wikiTitlePrefix, $modelName);
         } else {
-            $summarizer->runForProject($targetProjectId, $customPrompt, $wikiTitlePrefix);
+            $summarizer->runForProject($targetProjectId, $customPrompt, $wikiTitlePrefix, $modelName);
         }
     } else {
         // 全体のアクティビティを処理
         // 日付範囲指定がある場合
         if ($fromDate && $toDate) {
-            $summarizer->runWithDateRange($fromDate, $toDate, $customPrompt, $wikiTitlePrefix);
+            $summarizer->runWithDateRange($fromDate, $toDate, $customPrompt, $wikiTitlePrefix, $modelName);
         } else {
-            $summarizer->run($customPrompt, $wikiTitlePrefix);
+            $summarizer->run($customPrompt, $wikiTitlePrefix, $modelName);
         }
     }
 
