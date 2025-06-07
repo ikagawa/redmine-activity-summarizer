@@ -11,7 +11,19 @@ use Dotenv\Dotenv;
 
 // .envから環境変数を読み込む
 $dotenv = Dotenv::createImmutable(__DIR__ . '/..');
-$dotenv->load();
+$dotenv->safeLoad();
+
+// .envファイルの値を優先したい場合のフォールバック
+$geminiApiKey = $_ENV['GEMINI_API_KEY'] ?? null;
+
+// .envファイルから直接読み取る（最後の手段）
+if (empty($geminiApiKey)) {
+    $envContent = file_get_contents(__DIR__ . '/../.env');
+    if (preg_match('/^GEMINI_API_KEY=(.+)$/m', $envContent, $matches)) {
+        $geminiApiKey = trim($matches[1]);
+        $_ENV['GEMINI_API_KEY'] = $geminiApiKey;
+    }
+}
 
 // コマンドライン引数の処理
 $options = getopt('p:d:h', ['project:', 'days:', 'help']);
