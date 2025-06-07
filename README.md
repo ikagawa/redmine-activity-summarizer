@@ -117,6 +117,9 @@ php summarize.php --cleanup
 | `-I, --insecure` | SSL証明書の検証を無効にする |
 | `-l, --list-temp` | 保存されている一時ファイルを一覧表示 |
 | `-c, --cleanup` | 7日以上古い一時ファイルを削除 |
+| `-e, --export` | アクティビティデータをJSONファイルにエクスポート |
+| `-E, --export-project=ID` | 特定プロジェクトのデータをJSONにエクスポート |
+| `-o, --output=PATH` | エクスポート時の出力ファイルパスを指定 |
 | `-h, --help` | ヘルプメッセージを表示 |
 
 ## 出力されるWikiページ
@@ -184,3 +187,23 @@ MIT
 - PostgreSQLの読み取り専用ユーザーの使用を推奨します
 - API制限やクォータにご注意ください（Gemini API）
 - 一時ファイルは定期的にクリーンアップしてください
+
+## プロンプト調整用機能
+
+AIプロンプトの調整用に、データベースからデータをJSONファイルとして出力する機能を提供しています。
+
+```bash
+# 全体のアクティビティデータをJSONファイルにエクスポート
+php bin/summarize.php --export
+
+# 特定プロジェクトのアクティビティデータをJSONファイルにエクスポート
+php bin/summarize.php --export-project=1
+
+# 出力先ファイルパスを指定
+php bin/summarize.php --export --output=/path/to/output.json
+
+# エクスポートする日数を指定
+php bin/summarize.php --export --days=30
+```
+
+エクスポートされたJSONデータは、Gemini APIプロンプトの調整や、アクティビティデータの分析に使用できます。

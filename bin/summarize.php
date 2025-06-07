@@ -24,7 +24,7 @@ if (empty($geminiApiKey)) {
 }
 
 // コマンドライン引数の処理
-$options = getopt('p:d:lchvtDI', ['project:', 'days:', 'list-temp', 'cleanup', 'help', 'verbose', 'test', 'diagnose', 'insecure']);
+$options = getopt('p:d:lchvtDIeE:o:', ['project:', 'days:', 'list-temp', 'cleanup', 'help', 'verbose', 'test', 'diagnose', 'insecure', 'export', 'export-project:', 'output:']);
 
 if (isset($options['h']) || isset($options['help'])) {
     echo "使い方: php summarize.php [オプション]\n";
@@ -33,11 +33,14 @@ if (isset($options['h']) || isset($options['help'])) {
     echo "  -d, --days=NUM      要約する日数を指定（デフォルト: 環境変数のACTIVITY_DAYS）\n";
     echo "  -l, --list-temp     保存されている一時ファイルを一覧表示\n";
     echo "  -c, --cleanup       7日以上古い一時ファイルを削除\n";
-    echo "  -v, --verbose       詳細なデバッグ情報を表示\n";
-    echo "  -t, --test          Redmine API接続テストのみ実行\n";
-    echo "  -D, --diagnose      Redmine URL診断を実行\n";
-    echo "  -I, --insecure      SSL証明書の検証を無効にする\n";
-    echo "  -h, --help          このヘルプメッセージを表示\n";
+    echo "  -v, --verbose           詳細なデバッグ情報を表示\n";
+    echo "  -t, --test              Redmine API接続テストのみ実行\n";
+    echo "  -D, --diagnose          Redmine URL診断を実行\n";
+    echo "  -I, --insecure          SSL証明書の検証を無効にする\n";
+    echo "  -e, --export            アクティビティデータをJSONにエクスポートして終了\n";
+    echo "  -E, --export-project=ID 特定プロジェクトのデータをJSONにエクスポート\n";
+    echo "  -o, --output=PATH       エクスポート時の出力ファイルパスを指定\n";
+    echo "  -h, --help              このヘルプメッセージを表示\n";
     exit(0);
 }
 
@@ -115,6 +118,29 @@ try {
     // 古い一時ファイルのクリーンアップ
     if (isset($options['c']) || isset($options['cleanup'])) {
         $summarizer->cleanupOldTempFiles();
+        exit(0);
+    }
+
+    // 出力ファイルパスの設定
+    $outputPath = null;
+    if (isset($options['o']) || isset($options['output'])) {
+        $outputPath = isset($options['o']) ? $options['o'] : $options['output'];
+    }
+
+    // 全体アクティビティをJSONにエクスポート
+    if (isset($options['e']) || isset($options['export'])) {
+        echo "アクティビティデータをJSONファイルにエクスポートします...\n";
+        $filePath = $database->exportActivitiesToJson($activityDays, $outputPath);
+        echo "エクスポート完了: {$filePath}\n";
+        exit(0);
+    }
+
+    // 特定プロジェクトのアクティビティをJSONにエクスポート
+    if (isset($options['E']) || isset($options['export-project'])) {
+        $exportProjectId = isset($options['E']) ? (int)$options['E'] : (int)$options['export-project'];
+        echo "プロジェクトID {$exportProjectId} のアクティビティデータをJSONファイルにエクスポートします...\n";
+        $filePath = $database->exportProjectActivitiesToJson($exportProjectId, $activityDays, $outputPath);
+        echo "エクスポート完了: {$filePath}\n";
         exit(0);
     }
 
