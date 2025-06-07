@@ -115,8 +115,9 @@ class SummarizerService
      * @param string|null $customPrompt カスタムプロンプト（nullの場合はデフォルト）
      * @param string|null $wikiTitlePrefix Wikiページタイトルのプレフィックス（nullの場合は「ActivitySummary」）
      * @param string|null $llmModel 使用するLLMモデル（nullの場合はデフォルト）
+     * @param string|null $userLogin アクティビティを取得するユーザーID
      */
-    public function runWithDateRange(string $fromDate, string $toDate, ?string $customPrompt = null, ?string $wikiTitlePrefix = null, ?string $llmModel = null): void
+    public function runWithDateRange(string $fromDate, string $toDate, ?string $customPrompt = null, ?string $wikiTitlePrefix = null, ?string $llmModel = null, ?string $userLogin = null): void
     {
         $tempFile = null;
 
@@ -136,7 +137,7 @@ class SummarizerService
 
             // 1. PostgreSQLから指定期間のアクティビティを取得
             echo "期間指定（{$fromDate} から {$toDate}）でアクティビティデータを取得中...\n";
-            $activities = $this->database->getActivitiesByDateRange($fromDate, $toDate);
+            $activities = $this->database->getActivitiesByDateRange($fromDate, $toDate, $userLogin);
 
             if (empty($activities)) {
                 echo "{$fromDate}から{$toDate}までのアクティビティはありません。\n";

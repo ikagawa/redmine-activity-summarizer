@@ -24,7 +24,7 @@ if (empty($geminiApiKey)) {
 }
 
 // コマンドライン引数の処理
-$options = getopt('p:d:f:t:lchvDIeE:o:P:T:SM:', ['project:', 'days:', 'from:', 'to:', 'list-temp', 'cleanup', 'help', 'verbose', 'test', 'diagnose', 'insecure', 'export', 'export-project:', 'output:', 'prompt:', 'title:', 'show-token-info', 'model:']);
+$options = getopt('p:d:f:t:lchvDIeE:o:P:T:SM:u:', ['project:', 'days:', 'from:', 'to:', 'list-temp', 'cleanup', 'help', 'verbose', 'test', 'diagnose', 'insecure', 'export', 'export-project:', 'output:', 'prompt:', 'title:', 'show-token-info', 'model:', 'user:']);
 
 if (isset($options['h']) || isset($options['help'])) {
     echo "使い方: php summarize.php [オプション]\n";
@@ -33,6 +33,7 @@ if (isset($options['h']) || isset($options['help'])) {
     echo "  -v, --verbose           詳細なデバッグ情報を表示\n";
     echo "\nアクティビティ要約オプション:\n";
     echo "  -p, --project=ID        特定のプロジェクトIDのアクティビティのみを要約\n";
+    echo "  -u, --user=LOGIN        特定のユーザー(login名)のアクティビティのみを要約(from, toがあるときのみ)\n";
     echo "  -d, --days=NUM          要約する日数を指定（デフォルト: 環境変数のACTIVITY_DAYS）\n";
     echo "  -P, --prompt=PATH       カスタムプロンプトファイルを指定\n";
     echo "  -T, --title=NAME        Wikiページタイトルのプレフィックスを指定\n";
@@ -164,6 +165,15 @@ try {
         }
     }
 
+    // ユーザー指定の設定
+    $userLogin = null;
+    if (isset($options['u']) || isset($options['user'])) {
+        $userLogin = isset($options['u']) ? $options['u'] : $options['user'];
+        if ($debug) {
+            echo "特定ユーザーのアクティビティを処理: {$userLogin}\n";
+        }
+    }
+
     // LLMモデル名の設定
     $modelName = null;
     if (isset($options['M']) || isset($options['model'])) {
@@ -205,7 +215,7 @@ try {
         echo "アクティビティデータをJSONファイルにエクスポートします...\n";
         // 日付範囲指定がある場合
         if ($fromDate && $toDate) {
-            $filePath = $database->exportActivitiesByDateRangeToJson($fromDate, $toDate, $outputPath);
+            $filePath = $database->exportActivitiesByDateRangeToJson($fromDate, $toDate, $outputPath, $userLogin);
         } else {
             $filePath = $database->exportActivitiesToJson($activityDays, $outputPath);
         }
@@ -241,7 +251,7 @@ try {
         // 全体のアクティビティを処理
         // 日付範囲指定がある場合
         if ($fromDate && $toDate) {
-            $summarizer->runWithDateRange($fromDate, $toDate, $customPrompt, $wikiTitlePrefix, $modelName);
+            $summarizer->runWithDateRange($fromDate, $toDate, $customPrompt, $wikiTitlePrefix, $modelName, $userLogin);
         } else {
             $summarizer->run($customPrompt, $wikiTitlePrefix, $modelName);
         }

@@ -164,6 +164,7 @@ php bin/summarize.php --test --verbose
 | オプション | 説明 |
 |------------|------|
 | `-p, --project=ID` | 特定のプロジェクトIDのアクティビティのみを要約 |
+| `-u, --user=LOGIN` | 特定のユーザー（login名）のアクティビティのみを要約 |
 | `-d, --days=NUM` | 要約する日数を指定（デフォルト: 環境変数のACTIVITY_DAYS） |
 | `-f, --from=DATE` | 開始日を指定（YYYY-MM-DD形式） |
 | `-t, --to=DATE` | 終了日を指定（YYYY-MM-DD形式） |

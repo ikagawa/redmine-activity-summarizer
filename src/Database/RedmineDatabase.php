@@ -82,9 +82,10 @@ class RedmineDatabase
      * 
      * @param string $fromDate 開始日（YYYY-MM-DD形式）
      * @param string $toDate 終了日（YYYY-MM-DD形式）
+     * @param string $userLogin 対象となるユーザーID
      * @return array アクティビティの配列
      */
-    public function getActivitiesByDateRange(string $fromDate, string $toDate): array
+    public function getActivitiesByDateRange(string $fromDate, string $toDate, ?string $userLogin = null): array
     {
         // 入力形式の検証（YYYY-MM-DD形式であること）
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fromDate) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $toDate)) {
@@ -104,6 +105,7 @@ class RedmineDatabase
                 JOIN issues i ON j.journalized_id = i.id
                 JOIN projects p ON i.project_id = p.id
                 JOIN users u ON j.user_id = u.id
+                --user_cond
                 WHERE j.created_on >= :from_date AND j.created_on <= (:to_date || ' 23:59:59')::timestamp
                 AND j.journalized_type = 'Issue'
                 UNION
@@ -118,14 +120,22 @@ class RedmineDatabase
                     'issue_add' as activity_type
                 FROM issues i
                 JOIN users u ON i.author_id = u.id
+                --user_cond
                 JOIN projects p ON i.project_id = p.id
                 WHERE i.created_on >= :from_date AND i.created_on <= (:to_date || ' 23:59:59')::timestamp
                 ORDER BY created_at DESC";
+
+        if ($userLogin !== null) {
+            $sql = str_replace('--user_cond', "AND u.login = :user_id", $sql);
+        }
 
         try {
             $stmt = $this->connection->prepare($sql);
             $stmt->bindParam(':from_date', $fromDate, PDO::PARAM_STR);
             $stmt->bindParam(':to_date', $toDate, PDO::PARAM_STR);
+            if ($userLogin !== null) {
+                $stmt->bindParam(':user_id', $userLogin, PDO::PARAM_STR);
+            }
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
@@ -301,13 +311,14 @@ class RedmineDatabase
      * @param string $fromDate 開始日（YYYY-MM-DD形式）
      * @param string $toDate 終了日（YYYY-MM-DD形式）
      * @param string|null $outputPath 出力先ファイルパス（nullの場合はデフォルトパス）
+     * @param string|null $userLogin エクスポートするユーザーID
      * @return string 出力されたファイルパス
      */
-    public function exportActivitiesByDateRangeToJson(string $fromDate, string $toDate, ?string $outputPath = null): string
+    public function exportActivitiesByDateRangeToJson(string $fromDate, string $toDate, ?string $outputPath = null, ?string $userLogin = null): string
     {
         try {
             // アクティビティデータを取得
-            $activities = $this->getActivitiesByDateRange($fromDate, $toDate);
+            $activities = $this->getActivitiesByDateRange($fromDate, $toDate, $userLogin);;
 
             if (empty($activities)) {
                 throw new \Exception("{$fromDate}から{$toDate}までのアクティビティはありません。");
