@@ -14,24 +14,93 @@ class SummarizerService
     private int $activityDays;
     private int $projectId;
     private string $tempDir;
+    private bool $debug;
 
     public function __construct(
         RedmineDatabase $database,
         GeminiClient $gemini,
         RedmineClient $redmine,
         int $activityDays,
-        int $projectId
+        int $projectId,
+        bool $debug = false
     ) {
         $this->database = $database;
         $this->gemini = $gemini;
         $this->redmine = $redmine;
         $this->activityDays = $activityDays;
         $this->projectId = $projectId;
+        $this->debug = $debug;
+        
+        // デバッグモードをRedmineClientに設定
+        $this->redmine->setDebug($debug);
         
         // 一時ファイル保存ディレクトリを設定
         $this->tempDir = __DIR__ . '/../temp';
         if (!is_dir($this->tempDir)) {
             mkdir($this->tempDir, 0755, true);
+        }
+    }
+
+    /**
+     * Redmine URL診断
+     */
+    public function diagnoseRedmineUrl(): void
+    {
+        echo "Redmine URL診断を実行中...\n";
+        $results = $this->redmine->testUrlAccess();
+        
+        foreach ($results as $key => $result) {
+            echo "\n--- {$key} ---\n";
+            echo "URL: {$result['url']}\n";
+            echo "Status Code: {$result['status_code']}\n";
+            echo "成功: " . ($result['success'] ? 'Yes' : 'No') . "\n";
+            echo "応答時間: {$result['total_time']}秒\n";
+            
+            if (!empty($result['curl_error'])) {
+                echo "cURL Error: {$result['curl_error']}\n";
+            }
+            
+            if ($result['success']) {
+                echo "✓ この URL は正常にアクセスできます\n";
+            }
+        }
+        
+        // 推奨事項の表示
+        echo "\n=== 推奨事項 ===\n";
+        $hasSuccess = false;
+        foreach ($results as $result) {
+            if ($result['success']) {
+                echo "推奨URL: {$result['url']}\n";
+                $hasSuccess = true;
+                break;
+            }
+        }
+        
+        if (!$hasSuccess) {
+            echo "すべてのURLでエラーが発生しています。\n";
+            echo "1. .envファイルのREDMINE_URLを確認してください\n";
+            echo "2. Redmineサーバーが稼働していることを確認してください\n";
+            echo "3. ネットワーク接続を確認してください\n";
+            echo "4. --insecure オプションでSSL検証を無効にして試してください\n";
+        }
+    }
+
+    /**
+     * Redmine API接続テスト
+     */
+    public function testRedmineConnection(): void
+    {
+        echo "Redmine API接続テストを実行中...\n";
+        $result = $this->redmine->testConnection();
+        
+        if ($result['success']) {
+            echo "✓ {$result['message']}\n";
+            if ($this->debug && $result['data']) {
+                echo "取得データ: " . json_encode($result['data'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n";
+            }
+        } else {
+            echo "✗ {$result['message']}\n";
+            throw new \Exception("Redmine API接続に失敗しました");
         }
     }
 
@@ -43,6 +112,11 @@ class SummarizerService
         $tempFile = null;
         
         try {
+            // API接続テスト
+            if ($this->debug) {
+                $this->testRedmineConnection();
+            }
+
             // 1. PostgreSQLからアクティビティを取得
             echo "アクティビティデータを取得中...\n";
             $activities = $this->database->getActivities($this->activityDays);
@@ -63,12 +137,16 @@ class SummarizerService
             $tempFile = $this->saveSummaryToTempFile($summary, "all_activities_{$date}");
             echo "要約を一時ファイルに保存しました: {$tempFile}\n";
 
-            // 4. 要約をRedmineに投稿
-            echo "生成された要約をRedmineに投稿中...\n";
+            // 4. 要約をRedmineのWikiページに投稿
+            echo "生成された要約をRedmine Wikiに投稿中...\n";
 
             // Wikiページとして投稿
             $wikiDate = date('Y-m-d');
-            $title = "ActivitySummary{$wikiDate}";
+            $title = "ActivitySummary_{$wikiDate}";
+            
+            if ($this->debug) {
+                echo "プロジェクト情報を取得中...\n";
+            }
             $project = $this->redmine->getProject($this->projectId);
 
             $this->redmine->updateWikiPage(
@@ -78,7 +156,7 @@ class SummarizerService
                 "過去{$this->activityDays}日間のアクティビティ要約を自動生成"
             );
 
-            echo "要約が正常に投稿されました。Wiki: {$title}\n";
+            echo "要約が正常にWikiページに投稿されました。Wiki: {$title}\n";
 
             // 5. 投稿成功時に一時ファイルを削除
             $this->deleteTempFile($tempFile);
@@ -103,6 +181,11 @@ class SummarizerService
         $tempFile = null;
         
         try {
+            // API接続テスト
+            if ($this->debug) {
+                $this->testRedmineConnection();
+            }
+
             // 1. PostgreSQLから特定プロジェクトのアクティビティを取得
             echo "プロジェクトID {$targetProjectId} のアクティビティを取得中...\n";
             $activities = $this->database->getProjectActivities($targetProjectId, $this->activityDays);
@@ -123,20 +206,26 @@ class SummarizerService
             $tempFile = $this->saveSummaryToTempFile($summary, "project_{$targetProjectId}_{$date}");
             echo "要約を一時ファイルに保存しました: {$tempFile}\n";
 
-            // 4. 要約をRedmineに投稿
-            echo "生成された要約をRedmineに投稿中...\n";
+            // 4. 要約をRedmineのWikiページに投稿（課題ではなくWikiに変更）
+            echo "生成された要約をRedmine Wikiに投稿中...\n";
 
-            // 課題として投稿
-            $issueDate = date('Y-m-d');
-            $subject = "プロジェクトアクティビティ要約 ({$issueDate})";
+            // Wikiページとして投稿
+            $wikiDate = date('Y-m-d');
+            $title = "Project{$targetProjectId}_ActivitySummary_{$wikiDate}";
+            
+            if ($this->debug) {
+                echo "プロジェクト情報を取得中...\n";
+            }
+            $project = $this->redmine->getProject($targetProjectId);
 
-            $this->redmine->createIssue(
+            $this->redmine->updateWikiPage(
                 $targetProjectId,
-                $subject,
-                $summary
+                $title,
+                $summary,
+                "プロジェクト{$targetProjectId}の過去{$this->activityDays}日間のアクティビティ要約を自動生成"
             );
 
-            echo "要約が正常に課題として投稿されました。\n";
+            echo "要約が正常にWikiページに投稿されました。Wiki: {$title}\n";
 
             // 5. 投稿成功時に一時ファイルを削除
             $this->deleteTempFile($tempFile);
@@ -151,13 +240,6 @@ class SummarizerService
         }
     }
 
-    /**
-     * 要約を一時ファイルに保存
-     * 
-     * @param string $summary 要約内容
-     * @param string $filename ファイル名（拡張子なし）
-     * @return string 保存されたファイルパス
-     */
     private function saveSummaryToTempFile(string $summary, string $filename): string
     {
         $filepath = $this->tempDir . '/' . $filename . '.md';
@@ -176,11 +258,6 @@ class SummarizerService
         return $filepath;
     }
 
-    /**
-     * 一時ファイルを削除
-     * 
-     * @param string $filepath ファイルパス
-     */
     private function deleteTempFile(string $filepath): void
     {
         if (file_exists($filepath)) {
@@ -190,11 +267,6 @@ class SummarizerService
         }
     }
 
-    /**
-     * 一時ファイル一覧を取得
-     * 
-     * @return array 一時ファイルのパス一覧
-     */
     public function listTempFiles(): array
     {
         $files = [];
@@ -209,11 +281,6 @@ class SummarizerService
         return $files;
     }
 
-    /**
-     * 古い一時ファイルをクリーンアップ
-     * 
-     * @param int $days 何日前より古いファイルを削除するか
-     */
     public function cleanupOldTempFiles(int $days = 7): void
     {
         $cutoffTime = time() - ($days * 24 * 60 * 60);
