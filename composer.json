@@ -4,6 +4,8 @@
     "type": "project",
     "require": {
         "php": ">=7.4",
+        "ext-curl": "*",
+        "ext-json": "*",
         "kbsali/redmine-api": "^2.0",
         "google/cloud-ai-platform": "^0.30.0",
         "vlucas/phpdotenv": "^5.5"
