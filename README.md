@@ -1,5 +1,7 @@
 # Redmine Activity Summarizer
 
+© 2025 Redmine Activity Summarizer
+
 RedmineのアクティビティデータをPostgreSQLから取得し、Google Gemini 2.5 AIを使用して要約した後、その要約をRedmineのWikiページに投稿するPHPアプリケーションです。
 
 ## 機能
@@ -88,13 +90,13 @@ php bin/summarize.php -p 6 -d 14 --prompt=examples/prompt_templates/executive_su
 php bin/summarize.php --title=MonthlyActivityReport
 
 # 特定の期間を指定して要約を生成
-php bin/summarize.php --from=2023-05-01 --to=2023-05-31
+php bin/summarize.php --from=2025-05-01 --to=2025-05-31
 
 # 特定プロジェクトの特定期間の要約を生成
-php bin/summarize.php -p 6 --from=2023-05-01 --to=2023-05-31
+php bin/summarize.php -p 6 --from=2025-05-01 --to=2025-05-31
 
 # すべてのオプションを組み合わせて使用
-php bin/summarize.php -p 6 --from=2023-05-01 --to=2023-05-31 --prompt=examples/prompt_templates/executive_summary_prompt.txt --title=MayReport
+php bin/summarize.php -p 6 --from=2025-05-01 --to=2025-05-31 --prompt=examples/prompt_templates/executive_summary_prompt.txt --title=MayReport
 ```
 
 ### データのエクスポート
@@ -113,10 +115,10 @@ php bin/summarize.php --export --output=/path/to/output.json
 php bin/summarize.php --export --days=30
 
 # 特定の期間を指定してエクスポート
-php bin/summarize.php --export --from=2023-05-01 --to=2023-05-31
+php bin/summarize.php --export --from=2025-05-01 --to=2025-05-31
 
 # 特定プロジェクトの特定期間のデータをエクスポート
-php bin/summarize.php --export-project=1 --from=2023-05-01 --to=2023-05-31
+php bin/summarize.php --export-project=1 --from=2025-05-01 --to=2025-05-31
 ```
 
 ### 一時ファイル管理
@@ -199,8 +201,8 @@ php bin/summarize.php --test --verbose
 - **Wikiページ名**: `{プレフィックス}_{日付情報}`
   - 通常実行時: `ActivitySummary_YYYY-MM-DD`
   - カスタムタイトル: `-T MonthlyReport` → `MonthlyReport_YYYY-MM-DD`
-  - 期間指定時: `-f 2023-05-01 -t 2023-05-31` → `ActivitySummary_2023-05-01_to_2023-05-31`
-  - 期間指定+カスタムタイトル: `-T MonthlyReport -f 2023-05-01 -t 2023-05-31` → `MonthlyReport_2023-05-01_to_2023-05-31`
+  - 期間指定時: `-f 2025-05-01 -t 2025-05-31` → `ActivitySummary_2025-05-01_to_2025-05-31`
+  - 期間指定+カスタムタイトル: `-T MonthlyReport -f 2025-05-01 -t 2025-05-31` → `MonthlyReport_2025-05-01_to_2025-05-31`
 - **内容**: 全プロジェクトのアクティビティを統合した要約
 
 ### プロジェクト別要約の場合
@@ -208,8 +210,8 @@ php bin/summarize.php --test --verbose
 - **Wikiページ名**: `{プレフィックス}_{日付情報}`
   - 通常実行時: `Project{ID}_ActivitySummary_YYYY-MM-DD`
   - カスタムタイトル: `-T ProjectMonthlyReport` → `ProjectMonthlyReport_YYYY-MM-DD`
-  - 期間指定時: `-f 2023-05-01 -t 2023-05-31` → `Project{ID}_ActivitySummary_2023-05-01_to_2023-05-31`
-  - 期間指定+カスタムタイトル: `-T MayReport -f 2023-05-01 -t 2023-05-31` → `MayReport_2023-05-01_to_2023-05-31`
+  - 期間指定時: `-f 2025-05-01 -t 2025-05-31` → `Project{ID}_ActivitySummary_2025-05-01_to_2025-05-31`
+  - 期間指定+カスタムタイトル: `-T MayReport -f 2025-05-01 -t 2025-05-31` → `MayReport_2025-05-01_to_2025-05-31`
 - **内容**: 指定プロジェクトのみのアクティビティ要約
 
 ## トラブルシューティング
