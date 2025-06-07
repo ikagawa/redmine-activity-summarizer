@@ -198,7 +198,7 @@ class RedmineClient
      * @param array|null $data 送信データ
      * @return array レスポンスデータ
      */
-    private function makeRequest(string $method, string $endpoint, array $data = null): array
+    protected function makeRequest(string $method, string $endpoint, array $data = null): array
     {
         $url = $this->url . $endpoint;
         

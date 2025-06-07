@@ -4,44 +4,33 @@ namespace Tests\Redmine;
 
 use PHPUnit\Framework\TestCase;
 use RedmineSummarizer\Redmine\RedmineClient;
-use Redmine\Client as BaseClient;
 
 class RedmineClientTest extends TestCase
 {
     public function testCreateIssue(): void
     {
-        // モックの作成
-        $baseClientMock = $this->createMock(BaseClient::class);
-        $issueMock = $this->getMockBuilder(\stdClass::class)
-            ->addMethods(['create'])
+        // モック化されたメソッドが期待通りの値を返すパーシャルモックを作成
+        $client = $this->getMockBuilder(RedmineClient::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['makeRequest'])
             ->getMock();
 
-        // issue->createメソッドの期待値を設定
-        $issueMock->expects($this->once())
-            ->method('create')
-            ->with([
-                'project_id' => 1,
-                'subject' => 'テスト課題',
-                'description' => 'テスト説明',
-                'tracker_id' => 1
-            ])
-            ->willReturn((object)[
-                'getContent' => function() {
-                    return ['issue' => ['id' => 123]];
-                }
-            ]);
-
-        // BaseClientのプロパティをモックに設定
-        $baseClientMock->issue = $issueMock;
-
-        // RedmineClientのインスタンスを作成
-        $reflectionClass = new \ReflectionClass(RedmineClient::class);
-        $client = $reflectionClass->newInstanceWithoutConstructor();
-
-        // プライベートプロパティにモックを設定
-        $reflectionProperty = $reflectionClass->getProperty('client');
-        $reflectionProperty->setAccessible(true);
-        $reflectionProperty->setValue($client, $baseClientMock);
+        // makeRequestメソッドが期待通りのパラメータで呼び出され、適切な結果を返すことを設定
+        $client->expects($this->once())
+            ->method('makeRequest')
+            ->with(
+                'POST',
+                '/issues.json', 
+                [
+                    'issue' => [
+                        'project_id' => 1,
+                        'subject' => 'テスト課題',
+                        'description' => 'テスト説明',
+                        'tracker_id' => 1
+                    ]
+                ]
+            )
+            ->willReturn(['issue' => ['id' => 123]]);
 
         // テスト実行
         $result = $client->createIssue(1, 'テスト課題', 'テスト説明');

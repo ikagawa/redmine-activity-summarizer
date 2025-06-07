@@ -7,13 +7,21 @@
         "ext-curl": "*",
         "ext-json": "*",
         "ext-pdo": "*",
-        "kbsali/redmine-api": "^2.0",
         "google/cloud-ai-platform": "^0.30.0",
         "vlucas/phpdotenv": "^5.5"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0",
+        "kbsali/redmine-api": "^2.0"
     },
     "autoload": {
         "psr-4": {
             "RedmineSummarizer\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
         }
     }
 }
