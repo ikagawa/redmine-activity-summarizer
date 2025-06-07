@@ -327,8 +327,10 @@ class SummarizerService
      * 特定のプロジェクトのアクティビティのみ要約
      * 
      * @param int $targetProjectId 対象プロジェクトID
+     * @param string|null $customPrompt カスタムプロンプト（nullの場合はデフォルト）
+     * @param string|null $wikiTitlePrefix Wikiページタイトルのプレフィックス（nullの場合は「Project{ID}_ActivitySummary」）
      */
-    public function runForProject(int $targetProjectId): void
+    public function runForProject(int $targetProjectId, ?string $customPrompt = null, ?string $wikiTitlePrefix = null): void
     {
         $tempFile = null;
         
@@ -393,25 +395,25 @@ class SummarizerService
         }
     }
 
-    private function saveSummaryToTempFile(string $summary, string $filename): string
+    protected function saveSummaryToTempFile(string $summary, string $filename): string
     {
         $filepath = $this->tempDir . '/' . $filename . '.md';
-        
+
         // メタデータを含む内容を作成
         $content = "# 生成日時: " . date('Y-m-d H:i:s') . "\n";
         $content .= "# 対象期間: 過去{$this->activityDays}日間\n";
         $content .= "# プロジェクトID: {$this->projectId}\n\n";
         $content .= "---\n\n";
         $content .= $summary;
-        
+
         if (file_put_contents($filepath, $content) === false) {
             throw new \Exception("一時ファイルの保存に失敗しました: {$filepath}");
         }
-        
+
         return $filepath;
     }
 
-    private function deleteTempFile(string $filepath): void
+    protected function deleteTempFile(string $filepath): void
     {
         if (file_exists($filepath)) {
             if (!unlink($filepath)) {
