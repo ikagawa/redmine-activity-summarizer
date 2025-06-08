@@ -119,7 +119,7 @@ class RedmineDatabase
                 --user_cond
                 WHERE j.created_on >= :from_date AND j.created_on <= (:to_date || ' 23:59:59')::timestamp
                 AND j.journalized_type = 'Issue'
-                UNION
+                UNION ALL
                 SELECT 
                     i.id as issue_id,
                     i.subject as issue_subject,
@@ -134,6 +134,24 @@ class RedmineDatabase
                 --user_cond
                 JOIN projects p ON i.project_id = p.id
                 WHERE i.created_on >= :from_date AND i.created_on <= (:to_date || ' 23:59:59')::timestamp
+                -- changesets
+                UNION ALL
+                 SELECT
+                     ci.issue_id,
+                     SPLIT_PART(comments, E'\n', 1) as issue_subject,
+                     comments as issue_description,
+                     p.name as project_name,
+                     COALESCE(u.login, c.committer) as author,
+                     LEFT(c.revision, 10) as comment,
+                     committed_on as created_at,
+                     'changeset'::text as activity_type
+                FROM changesets c
+                JOIN repositories r ON c.repository_id = r.id
+                JOIN projects p ON r.project_id = p.id
+                JOIN users u ON c.user_id = u.id
+                --user_cond
+                LEFT JOIN changesets_issues ci ON c.id = ci.changeset_id
+               WHERE c.committed_on >= :from_date AND c.committed_on <= (:to_date || ' 23:59:59')::timestamp
                 ORDER BY created_at DESC";
 
         if ($userLogin !== null) {
