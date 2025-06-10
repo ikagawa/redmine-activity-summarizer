@@ -24,13 +24,14 @@ if (empty($geminiApiKey)) {
 }
 
 // コマンドライン引数の処理
-$options = getopt('p:d:f:t:lchvDIeE:o:P:T:SM:u:', ['project:', 'days:', 'from:', 'to:', 'list-temp', 'cleanup', 'help', 'verbose', 'test', 'diagnose', 'insecure', 'export', 'export-project:', 'output:', 'prompt:', 'title:', 'show-token-info', 'model:', 'user:']);
+$options = getopt('p:d:f:t:lchvDIeE:o:P:T:SM:u:L', ['project:', 'days:', 'from:', 'to:', 'list-temp', 'cleanup', 'help', 'verbose', 'test', 'diagnose', 'insecure', 'export', 'export-project:', 'output:', 'prompt:', 'title:', 'show-token-info', 'model:', 'user:', 'list-projects']);
 
 if (isset($options['h']) || isset($options['help'])) {
     echo "使い方: php summarize.php [オプション]\n";
     echo "\n基本オプション:\n";
     echo "  -h, --help              このヘルプメッセージを表示\n";
     echo "  -v, --verbose           詳細なデバッグ情報を表示\n";
+    echo "  -L, --list-projects     Redmineのプロジェクト一覧とIDを表示\n";
     echo "\nアクティビティ要約オプション:\n";
     echo "  -p, --project=ID        特定のプロジェクトIDのアクティビティのみを要約\n";
     echo "  -u, --user=LOGIN        特定のユーザー(login名)のアクティビティのみを要約\n";
@@ -111,6 +112,68 @@ try {
     if (isset($options['test'])) {
         $summarizer->testRedmineConnection();
         echo "接続テストが完了しました。\n";
+        exit(0);
+    }
+
+    // プロジェクト一覧表示
+    if (isset($options['L']) || isset($options['list-projects'])) {
+        echo "Redmineプロジェクト一覧を取得中...\n";
+        $projects = $redmine->getProjects();
+        
+        if ($projects === null) {
+            echo "プロジェクト一覧の取得に失敗しました。\n";
+            exit(1);
+        }
+        
+        if (empty($projects)) {
+            echo "プロジェクトが見つかりませんでした。\n";
+            exit(0);
+        }
+        
+        // マルチバイト対応の文字列パディング関数
+        function mb_str_pad_custom($str, $pad_len, $pad_str = ' ', $dir = STR_PAD_RIGHT, $encoding = 'UTF-8') {
+            $str_len = mb_strwidth($str, $encoding);
+            $pad_str_len = mb_strwidth($pad_str, $encoding);
+            
+            if ($pad_len <= $str_len) {
+                return mb_substr($str, 0, $pad_len, $encoding);
+            }
+            
+            $pad_needed = $pad_len - $str_len;
+            
+            if ($dir == STR_PAD_RIGHT) {
+                return $str . str_repeat($pad_str, $pad_needed);
+            } else if ($dir == STR_PAD_LEFT) {
+                return str_repeat($pad_str, $pad_needed) . $str;
+            } else if ($dir == STR_PAD_BOTH) {
+                $pad_left = floor($pad_needed / 2);
+                $pad_right = $pad_needed - $pad_left;
+                return str_repeat($pad_str, $pad_left) . $str . str_repeat($pad_str, $pad_right);
+            }
+            
+            return $str;
+        }
+        
+        // テーブル形式で表示
+        echo "\n" . str_repeat("=", 100) . "\n";
+        echo mb_str_pad_custom("ID", 5) . " | " . 
+             mb_str_pad_custom("プロジェクト名", 35) . " | " . 
+             mb_str_pad_custom("識別子", 25) . " | " . 
+             "説明\n";
+        echo str_repeat("=", 100) . "\n";
+        
+        foreach ($projects as $project) {
+            $description = isset($project['description']) ? 
+                mb_substr(str_replace(["\n", "\r", "\t"], " ", $project['description']), 0, 30) : '';
+            
+            echo mb_str_pad_custom((string)$project['id'], 5) . " | " .
+                 mb_str_pad_custom(mb_substr($project['name'], 0, 35), 35) . " | " .
+                 mb_str_pad_custom(isset($project['identifier']) ? mb_substr($project['identifier'], 0, 25) : '', 25) . " | " .
+                 $description . "\n";
+        }
+        
+        echo str_repeat("=", 100) . "\n";
+        echo "合計: " . count($projects) . "件のプロジェクト\n";
         exit(0);
     }
 

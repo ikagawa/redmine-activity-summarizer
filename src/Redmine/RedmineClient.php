@@ -109,6 +109,62 @@ class RedmineClient
     }
 
     /**
+     * プロジェクト一覧を取得
+     * 
+     * @param int $limit 取得件数の上限（デフォルト: 100）
+     * @param int $offset オフセット（デフォルト: 0）
+     * @return array|null プロジェクト一覧（エラーの場合はnull）
+     */
+    public function getProjects(int $limit = 100, int $offset = 0): ?array
+    {
+        try {
+            $allProjects = [];
+            $currentOffset = $offset;
+            
+            do {
+                $endpoint = "/projects.json?limit={$limit}&offset={$currentOffset}";
+                $response = $this->makeRequest('GET', $endpoint);
+                
+                if (!isset($response['projects'])) {
+                    if ($this->debug) {
+                        echo "プロジェクト一覧の取得に失敗しました。レスポンス: " . json_encode($response) . "\n";
+                    }
+                    return null;
+                }
+                
+                $projects = $response['projects'];
+                $allProjects = array_merge($allProjects, $projects);
+                
+                // 次のページがあるかチェック
+                $totalCount = $response['total_count'] ?? count($projects);
+                $currentOffset += $limit;
+                
+                if ($this->debug) {
+                    echo "取得済み: " . count($allProjects) . "/{$totalCount} プロジェクト\n";
+                }
+                
+            } while (count($projects) === $limit && count($allProjects) < $totalCount);
+            
+            // IDでソート
+            usort($allProjects, function($a, $b) {
+                return $a['id'] <=> $b['id'];
+            });
+            
+            if ($this->debug) {
+                echo "プロジェクト一覧をIDでソートしました\n";
+            }
+            
+            return $allProjects;
+            
+        } catch (\Exception $e) {
+            if ($this->debug) {
+                echo "プロジェクト一覧取得エラー: " . $e->getMessage() . "\n";
+            }
+            return null;
+        }
+    }
+
+    /**
      * API接続テスト
      * 
      * @return array 接続テスト結果
