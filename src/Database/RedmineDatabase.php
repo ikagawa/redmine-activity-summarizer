@@ -69,11 +69,28 @@ class RedmineDatabase
                 JOIN projects p ON i.project_id = p.id
                 --user_cond_i
                 WHERE i.created_on >= NOW() - INTERVAL '{$days} days'
+                UNION
+                SELECT 
+                    NULL as issue_id,
+                    m.subject as issue_subject,
+                    m.content as issue_description,
+                    p.name as project_name,
+                    u.login as author,
+                    '' as comment,
+                    m.created_on as created_at,
+                    'forum_message' as activity_type
+                FROM messages m
+                JOIN boards b ON m.board_id = b.id
+                JOIN projects p ON b.project_id = p.id
+                JOIN users u ON m.author_id = u.id
+                --user_cond_m
+                WHERE m.created_on >= NOW() - INTERVAL '{$days} days'
                 ORDER BY created_at DESC";
 
                         if ($userLogin !== null) {
                             $sql = str_replace('--user_cond_j', "AND u.login = :user_id", $sql);
                             $sql = str_replace('--user_cond_i', "AND u.login = :user_id", $sql);
+                            $sql = str_replace('--user_cond_m', "AND u.login = :user_id", $sql);
                         }
 
         try {
@@ -116,7 +133,7 @@ class RedmineDatabase
                 JOIN issues i ON j.journalized_id = i.id
                 JOIN projects p ON i.project_id = p.id
                 JOIN users u ON j.user_id = u.id
-                --user_cond
+                --user_cond_j
                 WHERE j.created_on >= :from_date AND j.created_on <= (:to_date || ' 23:59:59')::timestamp
                 AND j.journalized_type = 'Issue'
                 UNION ALL
@@ -131,8 +148,8 @@ class RedmineDatabase
                     'issue_add' as activity_type
                 FROM issues i
                 JOIN users u ON i.author_id = u.id
-                --user_cond
                 JOIN projects p ON i.project_id = p.id
+                --user_cond_i
                 WHERE i.created_on >= :from_date AND i.created_on <= (:to_date || ' 23:59:59')::timestamp
                 -- changesets
                 UNION ALL
@@ -149,13 +166,33 @@ class RedmineDatabase
                 JOIN repositories r ON c.repository_id = r.id
                 JOIN projects p ON r.project_id = p.id
                 JOIN users u ON c.user_id = u.id
-                --user_cond
+                --user_cond_c
                 LEFT JOIN changesets_issues ci ON c.id = ci.changeset_id
                WHERE c.committed_on >= :from_date AND c.committed_on <= (:to_date || ' 23:59:59')::timestamp
+               -- forum messages
+                UNION ALL
+                SELECT 
+                    NULL as issue_id,
+                    m.subject as issue_subject,
+                    m.content as issue_description,
+                    p.name as project_name,
+                    u.login as author,
+                    '' as comment,
+                    m.created_on as created_at,
+                    'forum_message' as activity_type
+                FROM messages m
+                JOIN boards b ON m.board_id = b.id
+                JOIN projects p ON b.project_id = p.id
+                JOIN users u ON m.author_id = u.id
+                --user_cond_m
+                WHERE m.created_on >= :from_date AND m.created_on <= (:to_date || ' 23:59:59')::timestamp
                 ORDER BY created_at DESC";
 
         if ($userLogin !== null) {
-            $sql = str_replace('--user_cond', "AND u.login = :user_id", $sql);
+            $sql = str_replace('--user_cond_j', "AND u.login = :user_id", $sql);
+            $sql = str_replace('--user_cond_i', "AND u.login = :user_id", $sql);
+            $sql = str_replace('--user_cond_c', "AND u.login = :user_id", $sql);
+            $sql = str_replace('--user_cond_m', "AND u.login = :user_id", $sql);
         }
 
         try {
@@ -215,11 +252,29 @@ class RedmineDatabase
                 --user_cond_i
                 WHERE i.created_on >= NOW() - INTERVAL '{$days} days'
                 AND p.id = :project_id
+                UNION
+                SELECT 
+                    NULL as issue_id,
+                    m.subject as issue_subject,
+                    m.content as issue_description,
+                    p.name as project_name,
+                    u.login as author,
+                    '' as comment,
+                    m.created_on as created_at,
+                    'forum_message' as activity_type
+                FROM messages m
+                JOIN boards b ON m.board_id = b.id
+                JOIN projects p ON b.project_id = p.id
+                JOIN users u ON m.author_id = u.id
+                --user_cond_m
+                WHERE m.created_on >= NOW() - INTERVAL '{$days} days'
+                AND p.id = :project_id
                 ORDER BY created_at DESC";
 
                         if ($userLogin !== null) {
                             $sql = str_replace('--user_cond_j', "AND u.login = :user_id", $sql);
                             $sql = str_replace('--user_cond_i', "AND u.login = :user_id", $sql);
+                            $sql = str_replace('--user_cond_m', "AND u.login = :user_id", $sql);
                         }
 
         try {
@@ -314,6 +369,7 @@ class RedmineDatabase
                 JOIN issues i ON j.journalized_id = i.id
                 JOIN projects p ON i.project_id = p.id
                 JOIN users u ON j.user_id = u.id
+                --user_cond_j
                 WHERE j.created_on >= :from_date AND j.created_on <= (:to_date || ' 23:59:59')::timestamp
                 AND j.journalized_type = 'Issue'
                 AND p.id = :project_id
@@ -330,15 +386,42 @@ class RedmineDatabase
                 FROM issues i
                 JOIN users u ON i.author_id = u.id
                 JOIN projects p ON i.project_id = p.id
+                --user_cond_i
                 WHERE i.created_on >= :from_date AND i.created_on <= (:to_date || ' 23:59:59')::timestamp
                 AND p.id = :project_id
+                UNION
+                SELECT 
+                    NULL as issue_id,
+                    m.subject as issue_subject,
+                    m.content as issue_description,
+                    p.name as project_name,
+                    u.login as author,
+                    '' as comment,
+                    m.created_on as created_at,
+                    'forum_message' as activity_type
+                FROM messages m
+                JOIN boards b ON m.board_id = b.id
+                JOIN projects p ON b.project_id = p.id
+                JOIN users u ON m.author_id = u.id
+                --user_cond_m
+                WHERE m.created_on >= :from_date AND m.created_on <= (:to_date || ' 23:59:59')::timestamp
+                AND p.id = :project_id
                 ORDER BY created_at DESC";
+
+        if ($userLogin !== null) {
+            $sql = str_replace('--user_cond_j', "AND u.login = :user_id", $sql);
+            $sql = str_replace('--user_cond_i', "AND u.login = :user_id", $sql);
+            $sql = str_replace('--user_cond_m', "AND u.login = :user_id", $sql);
+        }
 
         try {
             $stmt = $this->connection->prepare($sql);
             $stmt->bindParam(':project_id', $projectId, PDO::PARAM_INT);
             $stmt->bindParam(':from_date', $fromDate, PDO::PARAM_STR);
             $stmt->bindParam(':to_date', $toDate, PDO::PARAM_STR);
+            if ($userLogin !== null) {
+                $stmt->bindParam(':user_id', $userLogin, PDO::PARAM_STR);
+            }
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
